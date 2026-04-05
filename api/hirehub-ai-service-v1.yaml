@@ -1,0 +1,1225 @@
+openapi: 3.0.3
+info:
+  title: HireHub AI Microservice
+  description: |
+    Internal Python/FastAPI microservice handling all AI/ML workloads for HireHub.
+    
+    **This service is NOT exposed to the public internet.** It is called exclusively 
+    by the Spring Boot backend via internal REST over Azure Virtual Network.
+    
+    **Architecture**:
+    - Runtime: Python 3.12 + FastAPI + Uvicorn
+    - ML Framework: scikit-learn, sentence-transformers, PyTorch (inference only)
+    - OCR: Tesseract + OpenCV for certificate verification
+    - Deployment: Azure Container Instances (ACI) with GPU for inference
+    - Communication: REST (sync for scoring, async for heavy tasks via callbacks)
+    
+    **Capabilities**:
+    1. Candidate matching & scoring (0-100 compatibility)
+    2. Certificate verification (OCR + anomaly detection)
+    3. CV/profile parsing (NLP extraction)
+    4. Career recommendations (premium feature)
+    5. Bias auditing (regulatory compliance — R.A. 9710, Consent Agreement Annex A)
+    
+    **Data flow**:
+    ```
+    Vue.js → Spring Boot → [this service] → Spring Boot → PostgreSQL
+    ```
+    Spring Boot sends candidate data + criteria, this service returns scores/results.
+    No direct database access — all data comes via the request payload.
+  version: 1.0.0
+  contact:
+    name: HireHub AI Team
+
+servers:
+  - url: http://ai-service:8000
+    description: Internal (Azure VNet)
+  - url: http://localhost:8000
+    description: Local development
+
+tags:
+  - name: Matching
+    description: Candidate-to-criteria compatibility scoring
+  - name: Verification
+    description: Certificate OCR and anomaly detection
+  - name: Parsing
+    description: CV and profile NLP extraction
+  - name: Recommendations
+    description: Career advice engine (premium)
+  - name: Audit
+    description: Bias detection and fairness monitoring
+  - name: Health
+    description: Service health and model status
+
+paths:
+  # ===========================================================================
+  # HEALTH
+  # ===========================================================================
+  /health:
+    get:
+      tags: [Health]
+      summary: Service health check
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  version:
+                    type: string
+                    example: 1.0.0
+                  models_loaded:
+                    type: object
+                    properties:
+                      matching_model:
+                        type: boolean
+                      ocr_engine:
+                        type: boolean
+                      nlp_parser:
+                        type: boolean
+                      embedding_model:
+                        type: boolean
+                  uptime_seconds:
+                    type: integer
+
+  # ===========================================================================
+  # MATCHING — The core AI feature
+  # ===========================================================================
+  /match/score:
+    post:
+      tags: [Matching]
+      summary: Score candidates against search criteria
+      description: |
+        The primary AI endpoint. Receives a list of candidate profiles and search 
+        criteria from the Spring Boot backend. Returns a compatibility score (0-100) 
+        for each candidate with a detailed breakdown.
+        
+        **Scoring algorithm** (weighted multi-factor):
+        - Rank match (25%): exact match vs adjacent rank
+        - Vessel type experience (20%): matching vessel type in sea service
+        - Years of experience (15%): relative to minimum requirement
+        - Certificate coverage (15%): required certs present and valid
+        - Availability (10%): days until available vs requirement
+        - Verification status (10%): AI-verified credentials bonus
+        - Recency (5%): how recent is the last sea service
+        
+        **Performance**: Typical response time 50-200ms for up to 100 candidates.
+        For larger batches (500+), use /match/score-batch (async).
+        
+        **Legal note (Consent Agreement Section 6.3)**: All AI scoring is advisory. 
+        It does not constitute hiring decisions or employment offers. Human review 
+        is preserved — the shipowner makes all decisions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreRequest'
+      responses:
+        '200':
+          description: Scores computed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreResponse'
+        '422':
+          description: Invalid input data
+
+  /match/score-batch:
+    post:
+      tags: [Matching]
+      summary: Async batch scoring for large candidate pools
+      description: |
+        For scoring 500+ candidates. Accepts the request, returns a job ID, 
+        and calls back the Spring Boot webhook when complete.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ScoreRequest'
+                - type: object
+                  required: [callback_url]
+                  properties:
+                    callback_url:
+                      type: string
+                      format: uri
+                      description: Spring Boot webhook to POST results to
+                      example: http://backend:8080/v1/internal/ai-callback
+      responses:
+        '202':
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: processing
+                  estimated_seconds:
+                    type: integer
+                    example: 15
+                  candidate_count:
+                    type: integer
+
+  /match/explain:
+    post:
+      tags: [Matching]
+      summary: Get detailed explanation of a specific score
+      description: |
+        Returns a human-readable explanation of why a candidate received their 
+        score. Used when a shipowner clicks "Why this score?" on a candidate card.
+        
+        Required by Consent Agreement Section 6.4(c): "providing, upon request, 
+        a meaningful explanation of the logic, significance, and envisaged 
+        consequences of specific automated decisions."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [candidate, criteria]
+              properties:
+                candidate:
+                  $ref: '#/components/schemas/CandidateData'
+                criteria:
+                  $ref: '#/components/schemas/MatchCriteria'
+      responses:
+        '200':
+          description: Score explanation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreExplanation'
+
+  /match/similar:
+    post:
+      tags: [Matching]
+      summary: Find similar candidates to a reference profile
+      description: |
+        Given a candidate profile, find the most similar profiles in the provided 
+        pool. Uses embedding-based similarity (sentence-transformers) on the 
+        combined profile text (rank + vessel types + skills + experience).
+        
+        Use case: "Show me more candidates like this one."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference_candidate, candidate_pool]
+              properties:
+                reference_candidate:
+                  $ref: '#/components/schemas/CandidateData'
+                candidate_pool:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CandidateData'
+                  maxItems: 500
+                top_k:
+                  type: integer
+                  default: 10
+                  maximum: 50
+      responses:
+        '200':
+          description: Similar candidates ranked by cosine similarity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  similar_candidates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        profile_id:
+                          type: string
+                          format: uuid
+                        similarity_score:
+                          type: number
+                          minimum: 0
+                          maximum: 1
+                          example: 0.89
+
+  # ===========================================================================
+  # VERIFICATION — Certificate authenticity
+  # ===========================================================================
+  /verify/certificate:
+    post:
+      tags: [Verification]
+      summary: Verify certificate authenticity via OCR + anomaly detection
+      description: |
+        Processes a certificate document (PDF or image) through:
+        1. **OCR extraction** — Tesseract + OpenCV preprocessing (deskew, denoise)
+        2. **Field parsing** — Extract cert name, issuer, dates, cert number
+        3. **Anomaly detection** — Check for:
+           - Font inconsistencies (mixed fonts suggesting edit)
+           - Resolution anomalies (pasted regions at different DPI)
+           - Date logic errors (issue date after expiry)
+           - Known fraudulent patterns from training data
+        4. **Cross-reference** — Compare extracted data against submitted form data
+        
+        Returns a verification verdict with confidence score and any flags.
+        
+        **Processing time**: 5-30 seconds depending on document quality.
+        Response is synchronous for single certificates.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyRequest'
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+        '400':
+          description: Document could not be processed (corrupt file, unsupported format)
+
+  /verify/batch:
+    post:
+      tags: [Verification]
+      summary: Batch verify multiple certificates (async)
+      description: |
+        For new profile registrations with multiple certificate uploads.
+        Processes all certificates and calls back when complete.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [certificates, callback_url]
+              properties:
+                certificates:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/VerifyRequest'
+                  maxItems: 20
+                callback_url:
+                  type: string
+                  format: uri
+      responses:
+        '202':
+          description: Batch verification accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  certificate_count:
+                    type: integer
+                  estimated_seconds:
+                    type: integer
+
+  # ===========================================================================
+  # PARSING — CV and profile NLP
+  # ===========================================================================
+  /parse/cv:
+    post:
+      tags: [Parsing]
+      summary: Extract structured data from uploaded CV
+      description: |
+        Accepts a PDF or DOCX CV and extracts structured maritime career data:
+        - Personal info (name, nationality, date of birth)
+        - Sea service records (vessel, rank, dates, company)
+        - Certificates (type, issuer, dates)
+        - Skills and competencies
+        - Education history
+        
+        Uses NLP pipeline: document layout analysis → text extraction → 
+        named entity recognition → maritime-specific field mapping.
+        
+        The extracted data is returned as structured JSON that can be used 
+        to auto-populate a seafarer profile (subject to user confirmation).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [document_url]
+              properties:
+                document_url:
+                  type: string
+                  description: Azure Blob Storage URL to the CV file
+                document_type:
+                  type: string
+                  enum: [pdf, docx]
+                  default: pdf
+      responses:
+        '200':
+          description: Extracted profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsedCV'
+        '400':
+          description: Document could not be parsed
+
+  /parse/profile-text:
+    post:
+      tags: [Parsing]
+      summary: Extract skills and keywords from free-text bio
+      description: |
+        Analyzes the seafarer's bio/description text and extracts:
+        - Maritime skills (ECDIS, GMDSS, cargo ops, etc.)
+        - Vessel type experience mentions
+        - Rank progression indicators
+        - Language proficiencies
+        
+        Used to auto-suggest skills tags and improve search matching.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  maxLength: 10000
+      responses:
+        '200':
+          description: Extracted entities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: ECDIS
+                        confidence:
+                          type: number
+                          example: 0.95
+                  vessel_types:
+                    type: array
+                    items:
+                      type: string
+                    example: [oil_tanker, chemical_tanker]
+                  languages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        language:
+                          type: string
+                          example: English
+                        level:
+                          type: string
+                          example: fluent
+
+  # ===========================================================================
+  # RECOMMENDATIONS — Career advice (premium)
+  # ===========================================================================
+  /recommend/career-path:
+    post:
+      tags: [Recommendations]
+      summary: Generate AI career roadmap for seafarer
+      description: |
+        Premium feature. Analyzes the seafarer's current profile and generates:
+        - Recommended next rank and timeline
+        - Certificate gaps (what they need for promotion)
+        - Training recommendations
+        - Salary benchmarks for current and target rank
+        - Vessel type diversification suggestions
+        
+        Based on analysis of career progression patterns in the platform data.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidateData'
+      responses:
+        '200':
+          description: Career recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CareerRecommendation'
+
+  /recommend/cert-gaps:
+    post:
+      tags: [Recommendations]
+      summary: Identify missing certificates for target rank
+      description: |
+        Compares the seafarer's current certificates against requirements 
+        for their desired rank and vessel type. Returns missing/expiring certs 
+        and recommended training providers.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_certificates, target_rank]
+              properties:
+                current_certificates:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CertificateData'
+                target_rank:
+                  type: string
+                  example: Chief Officer
+                target_vessel_type:
+                  type: string
+                  example: oil_chemical_tanker
+      responses:
+        '200':
+          description: Certificate gap analysis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  missing_certificates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        cert_type:
+                          type: string
+                        cert_name:
+                          type: string
+                          example: Advanced Tanker Operations
+                        required_for:
+                          type: string
+                          example: Chief Officer on oil/chemical tankers
+                        priority:
+                          type: string
+                          enum: [critical, recommended, optional]
+                  expiring_soon:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        cert_name:
+                          type: string
+                        expiry_date:
+                          type: string
+                          format: date
+                        days_remaining:
+                          type: integer
+                  readiness_score:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                    description: How ready the seafarer is for the target rank
+
+  /recommend/salary:
+    post:
+      tags: [Recommendations]
+      summary: Salary benchmark for rank and vessel type
+      description: |
+        Returns salary statistics (median, P25, P75) for a given rank and 
+        vessel type combination, based on aggregated platform data.
+        No individual salary data is exposed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rank, vessel_type]
+              properties:
+                rank:
+                  type: string
+                  example: 3rd Officer
+                vessel_type:
+                  type: string
+                  example: oil_chemical_tanker
+                nationality:
+                  type: string
+                  example: Filipino
+      responses:
+        '200':
+          description: Salary benchmarks (USD/month)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rank:
+                    type: string
+                  vessel_type:
+                    type: string
+                  currency:
+                    type: string
+                    example: USD
+                  period:
+                    type: string
+                    example: monthly
+                  percentile_25:
+                    type: number
+                    example: 1600
+                  median:
+                    type: number
+                    example: 1850
+                  percentile_75:
+                    type: number
+                    example: 2200
+                  sample_size:
+                    type: integer
+                    description: Number of data points (anonymized)
+                  last_updated:
+                    type: string
+                    format: date
+
+  # ===========================================================================
+  # AUDIT — Bias detection and fairness
+  # ===========================================================================
+  /audit/bias-report:
+    post:
+      tags: [Audit]
+      summary: Generate bias audit report for AI scoring
+      description: |
+        Analyzes AI scoring patterns for potential discrimination across 
+        protected characteristics. Required by:
+        - Consent Agreement Annex A, Section A.3 (Fairness & Non-Discrimination)
+        - R.A. 9710 (Magna Carta of Women)
+        - Labor Code anti-discrimination provisions
+        
+        Checks for statistical bias in scores by:
+        - Nationality
+        - Gender (if available)
+        - Age bracket
+        - Maritime academy attended
+        
+        Returns a fairness report with disparity metrics and recommendations.
+        Should be run periodically (monthly) by platform administrators.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scores_sample]
+              properties:
+                scores_sample:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      profile_id:
+                        type: string
+                        format: uuid
+                      score:
+                        type: number
+                      nationality:
+                        type: string
+                      gender:
+                        type: string
+                      age_bracket:
+                        type: string
+                        enum: [18-25, 26-35, 36-45, 46-55, 56+]
+                      rank:
+                        type: string
+                  minItems: 100
+                  description: Minimum 100 scored candidates for statistical validity
+      responses:
+        '200':
+          description: Bias audit report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BiasReport'
+
+  /audit/model-metrics:
+    get:
+      tags: [Audit]
+      summary: Get current AI model performance metrics
+      description: |
+        Returns accuracy, precision, recall for each AI component.
+        Used for monitoring and compliance reporting.
+      responses:
+        '200':
+          description: Model metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matching_model:
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                        example: 1.2.0
+                      last_trained:
+                        type: string
+                        format: date
+                      accuracy:
+                        type: number
+                        example: 0.87
+                      total_scores_computed:
+                        type: integer
+                  ocr_engine:
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      accuracy:
+                        type: number
+                        example: 0.94
+                      total_verifications:
+                        type: integer
+                      false_positive_rate:
+                        type: number
+                        example: 0.02
+                  nlp_parser:
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      extraction_accuracy:
+                        type: number
+                        example: 0.91
+                      total_cvs_parsed:
+                        type: integer
+
+# =============================================================================
+# COMPONENTS
+# =============================================================================
+components:
+  schemas:
+    # ------ Matching ------
+    CandidateData:
+      type: object
+      description: Candidate profile data sent from Spring Boot (no DB access here)
+      required: [profile_id, current_rank]
+      properties:
+        profile_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        nationality:
+          type: string
+        current_rank:
+          type: string
+          example: 3rd Officer
+        years_experience:
+          type: number
+          example: 4.5
+        verified_status:
+          type: boolean
+        available_from:
+          type: string
+          format: date
+        sea_service:
+          type: array
+          items:
+            type: object
+            properties:
+              vessel_type:
+                type: string
+              rank_held:
+                type: string
+              months:
+                type: integer
+                description: Duration in months
+              company:
+                type: string
+              is_recent:
+                type: boolean
+                description: Within last 2 years
+        certificates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CertificateData'
+        skills:
+          type: array
+          items:
+            type: string
+          example: [ECDIS, GMDSS, Cargo operations, Bridge watch]
+
+    CertificateData:
+      type: object
+      properties:
+        cert_type:
+          type: string
+          example: STCW
+        cert_name:
+          type: string
+        status:
+          type: string
+          enum: [valid, expiring, expired]
+        ai_verified:
+          type: boolean
+        expiry_date:
+          type: string
+          format: date
+
+    MatchCriteria:
+      type: object
+      description: Shipowner search criteria
+      properties:
+        required_rank:
+          type: string
+          example: 3rd Officer
+        vessel_type:
+          type: string
+          example: oil_chemical_tanker
+        min_experience_years:
+          type: number
+          example: 3
+        required_certificates:
+          type: array
+          items:
+            type: string
+          example: [COC, STCW, Tanker Familiarization]
+        preferred_nationality:
+          type: string
+          description: Preference only, cannot be exclusionary (anti-discrimination)
+        available_within_days:
+          type: integer
+          example: 60
+        verified_only:
+          type: boolean
+          default: false
+        required_skills:
+          type: array
+          items:
+            type: string
+
+    ScoreRequest:
+      type: object
+      required: [candidates, criteria]
+      properties:
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidateData'
+          maxItems: 500
+        criteria:
+          $ref: '#/components/schemas/MatchCriteria'
+
+    ScoreResponse:
+      type: object
+      properties:
+        scores:
+          type: array
+          items:
+            type: object
+            properties:
+              profile_id:
+                type: string
+                format: uuid
+              total_score:
+                type: number
+                minimum: 0
+                maximum: 100
+                example: 87.5
+              tier:
+                type: string
+                enum: [green, blue, amber]
+                description: "green: 85+, blue: 70-84, amber: <70"
+              breakdown:
+                type: object
+                properties:
+                  rank_match:
+                    type: number
+                    description: "0-25 points"
+                  vessel_experience:
+                    type: number
+                    description: "0-20 points"
+                  years_experience:
+                    type: number
+                    description: "0-15 points"
+                  certificate_coverage:
+                    type: number
+                    description: "0-15 points"
+                  availability:
+                    type: number
+                    description: "0-10 points"
+                  verification_bonus:
+                    type: number
+                    description: "0-10 points"
+                  recency:
+                    type: number
+                    description: "0-5 points"
+        criteria_hash:
+          type: string
+          description: SHA-256 hash of normalized criteria (for caching)
+        computed_at:
+          type: string
+          format: date-time
+        processing_ms:
+          type: integer
+          description: Processing time in milliseconds
+
+    ScoreExplanation:
+      type: object
+      properties:
+        profile_id:
+          type: string
+          format: uuid
+        total_score:
+          type: number
+        explanation:
+          type: array
+          items:
+            type: object
+            properties:
+              factor:
+                type: string
+                example: Rank match
+              score:
+                type: number
+                example: 25
+              max_score:
+                type: number
+                example: 25
+              reason:
+                type: string
+                example: Exact match — candidate is 3rd Officer, search requires 3rd Officer
+          description: Human-readable factor-by-factor explanation
+        strengths:
+          type: array
+          items:
+            type: string
+          example:
+            - Exact rank match for 3rd Officer
+            - 4+ years tanker experience
+            - All required certificates valid and AI-verified
+        gaps:
+          type: array
+          items:
+            type: string
+          example:
+            - Available 45 days from now (search prefers within 30 days)
+        recommendation:
+          type: string
+          example: Strong match. Candidate meets all core requirements with verified credentials.
+
+    # ------ Verification ------
+    VerifyRequest:
+      type: object
+      required: [certificate_id, document_url]
+      properties:
+        certificate_id:
+          type: string
+          format: uuid
+        document_url:
+          type: string
+          description: Azure Blob Storage URL
+        expected_data:
+          type: object
+          description: User-submitted form data for cross-reference
+          properties:
+            cert_name:
+              type: string
+            issuing_authority:
+              type: string
+            issue_date:
+              type: string
+              format: date
+            expiry_date:
+              type: string
+              format: date
+            cert_number:
+              type: string
+
+    VerifyResponse:
+      type: object
+      properties:
+        certificate_id:
+          type: string
+          format: uuid
+        verified:
+          type: boolean
+          description: Overall verification verdict
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.94
+          description: Model confidence in the verdict
+        flags:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [font_inconsistency, resolution_anomaly, date_error, data_mismatch, unknown_issuer, suspected_edit]
+              severity:
+                type: string
+                enum: [low, medium, high]
+              description:
+                type: string
+                example: Issue date (2025-03-15) does not match OCR extraction (2024-03-15)
+          description: Empty array = no issues found
+        extracted_data:
+          type: object
+          description: OCR-extracted fields from the document
+          properties:
+            cert_name:
+              type: string
+            issuing_authority:
+              type: string
+            issue_date:
+              type: string
+            expiry_date:
+              type: string
+            cert_number:
+              type: string
+            holder_name:
+              type: string
+        data_match:
+          type: object
+          description: Comparison between submitted and extracted data
+          properties:
+            name_match:
+              type: boolean
+            dates_match:
+              type: boolean
+            issuer_match:
+              type: boolean
+            number_match:
+              type: boolean
+        processing_ms:
+          type: integer
+
+    # ------ Parsing ------
+    ParsedCV:
+      type: object
+      description: Structured data extracted from CV document
+      properties:
+        confidence:
+          type: number
+          description: Overall extraction confidence
+        personal_info:
+          type: object
+          properties:
+            full_name:
+              type: string
+            nationality:
+              type: string
+            date_of_birth:
+              type: string
+              format: date
+            email:
+              type: string
+            phone:
+              type: string
+        sea_service:
+          type: array
+          items:
+            type: object
+            properties:
+              vessel_name:
+                type: string
+              vessel_type:
+                type: string
+              rank_held:
+                type: string
+              company:
+                type: string
+              start_date:
+                type: string
+                format: date
+              end_date:
+                type: string
+                format: date
+              confidence:
+                type: number
+        certificates:
+          type: array
+          items:
+            type: object
+            properties:
+              cert_type:
+                type: string
+              cert_name:
+                type: string
+              issuing_authority:
+                type: string
+              expiry_date:
+                type: string
+                format: date
+              confidence:
+                type: number
+        skills:
+          type: array
+          items:
+            type: string
+          example: [ECDIS, GMDSS, Cargo operations, ISM, ISPS]
+        education:
+          type: array
+          items:
+            type: object
+            properties:
+              institution:
+                type: string
+              degree:
+                type: string
+              year:
+                type: integer
+        languages:
+          type: array
+          items:
+            type: object
+            properties:
+              language:
+                type: string
+              level:
+                type: string
+
+    # ------ Recommendations ------
+    CareerRecommendation:
+      type: object
+      properties:
+        current_position:
+          type: object
+          properties:
+            rank:
+              type: string
+              example: 3rd Officer
+            experience_years:
+              type: number
+            vessel_type:
+              type: string
+        next_step:
+          type: object
+          properties:
+            recommended_rank:
+              type: string
+              example: 2nd Officer
+            estimated_timeline_months:
+              type: integer
+              example: 18
+            requirements:
+              type: array
+              items:
+                type: string
+              example:
+                - Minimum 36 months as 3rd Officer
+                - Valid COC for 2nd Officer
+                - Bridge Resource Management certificate
+        certificate_gaps:
+          type: array
+          items:
+            type: object
+            properties:
+              cert_name:
+                type: string
+              priority:
+                type: string
+                enum: [critical, recommended, optional]
+              estimated_cost_usd:
+                type: number
+              training_duration_days:
+                type: integer
+        salary_projection:
+          type: object
+          properties:
+            current_median_usd:
+              type: number
+              example: 1850
+            target_median_usd:
+              type: number
+              example: 2800
+            increase_percentage:
+              type: number
+              example: 51.4
+        vessel_diversification:
+          type: array
+          items:
+            type: string
+          description: Suggested vessel types to broaden experience
+          example: [lng, lpg]
+        overall_readiness:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: How ready for promotion (percentage)
+          example: 72
+
+    # ------ Audit ------
+    BiasReport:
+      type: object
+      properties:
+        report_date:
+          type: string
+          format: date-time
+        sample_size:
+          type: integer
+        overall_verdict:
+          type: string
+          enum: [pass, warning, fail]
+          description: "pass: no significant bias, warning: minor disparities, fail: action required"
+        dimensions:
+          type: array
+          items:
+            type: object
+            properties:
+              dimension:
+                type: string
+                example: nationality
+              groups_analyzed:
+                type: integer
+              max_disparity:
+                type: number
+                description: Maximum score difference between groups (0-100)
+                example: 3.2
+              verdict:
+                type: string
+                enum: [pass, warning, fail]
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    group:
+                      type: string
+                      example: Filipino
+                    count:
+                      type: integer
+                    mean_score:
+                      type: number
+                    std_dev:
+                      type: number
+        recommendations:
+          type: array
+          items:
+            type: string
+          example:
+            - No significant nationality-based bias detected
+            - Minor age disparity in 46-55 bracket — review recency weighting
+        compliant_with:
+          type: array
+          items:
+            type: string
+          example:
+            - R.A. 9710 (Magna Carta of Women)
+            - Consent Agreement Annex A, Section A.3
+            - Labor Code anti-discrimination provisions
