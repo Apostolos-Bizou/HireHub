@@ -1,0 +1,75 @@
+# HireHub — Local Development Stack
+# Run: docker-compose up -d
+
+version: "3.9"
+
+services:
+  # PostgreSQL 15
+  db:
+    image: postgres:15-alpine
+    container_name: hirehub-db
+    environment:
+      POSTGRES_DB: hirehub
+      POSTGRES_USER: hirehub
+      POSTGRES_PASSWORD: hirehub_dev_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../database/HireHub_Database_Schema_v1.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hirehub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: hirehub-backend
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: hirehub
+      DB_USER: hirehub
+      DB_PASS: hirehub_dev_2026
+      JWT_SECRET: hirehub_local_dev_jwt_secret_key_2026_256bits_minimum_required
+      AI_SERVICE_URL: http://ai-service:8000
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # FastAPI AI Microservice
+  ai-service:
+    build:
+      context: ../ai-service
+      dockerfile: Dockerfile
+    container_name: hirehub-ai
+    environment:
+      DATABASE_URL: postgresql://hirehub:hirehub_dev_2026@db:5432/hirehub
+      JWT_SECRET: hirehub_local_dev_jwt_secret_key_2026_256bits_minimum_required
+      BACKEND_URL: http://backend:8080/api/v1
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Vue.js Frontend (dev server)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: hirehub-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
