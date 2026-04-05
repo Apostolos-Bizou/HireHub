@@ -1,0 +1,2270 @@
+openapi: 3.0.3
+info:
+  title: HireHub API
+  description: |
+    RESTful API for HireHub — the professional network for maritime crew.
+    
+    **Architecture**: Java 21 / Spring Boot 3 backend serving a Vue.js 3 SPA frontend.
+    AI scoring and credential verification are handled by a separate Python/FastAPI 
+    microservice, called internally by this API.
+    
+    **Authentication**: JWT Bearer tokens via Spring Security. Access tokens expire 
+    after 1 hour; refresh tokens after 30 days.
+    
+    **Authorization**: Role-based access control (RBAC) with three roles:
+    - `SEAFARER` — profile management, job browsing, community
+    - `SHIPOWNER` — talent search, shortlists, fleet management
+    - `MANNING_AGENT` — candidate pipeline, deployment tracking
+    
+    **Legal context**: HireHub is a professional visibility platform, NOT a recruitment 
+    agency. All recruitment activity flows through DMW-licensed manning agents per 
+    R.A. 8042/10022 and R.A. 12021 (Magna Carta of Filipino Seafarers).
+  version: 1.0.0
+  contact:
+    name: HireHub Development
+    url: https://github.com/Apostolos-Bizou/HireHub
+  license:
+    name: Proprietary
+    url: https://hirehub.io/terms
+
+servers:
+  - url: https://api.hirehub.io/v1
+    description: Production (Azure App Service)
+  - url: http://localhost:8080/v1
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Authentication and session management
+  - name: Profiles
+    description: Seafarer professional profiles (the heart of HireHub)
+  - name: Sea Service
+    description: Seafarer employment history (timeline on profile)
+  - name: Certificates
+    description: Maritime certificates and credentials
+  - name: Skills
+    description: Professional skills and endorsements
+  - name: Search
+    description: Talent discovery for shipowners (AI-powered)
+  - name: Shortlists
+    description: Candidate pipeline and agent handoff
+  - name: Messaging
+    description: InMail-style communication between users
+  - name: Companies
+    description: Shipowner and manning agent company profiles
+  - name: Vessels
+    description: Fleet management for shipowners
+  - name: Feed
+    description: Community posts and engagement
+  - name: Notifications
+    description: User alerts and activity notifications
+  - name: Analytics
+    description: Profile views, search appearances, market insights
+  - name: AI (Internal)
+    description: Internal endpoints proxying to Python AI microservice
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ===========================================================================
+  # AUTH
+  # ===========================================================================
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, role]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: juan.delacruz@email.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                full_name:
+                  type: string
+                  example: Juan Dela Cruz
+      responses:
+        '201':
+          description: User created, verification email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: Email already registered
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate and receive JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token using refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid or expired refresh token
+
+  /auth/password-reset:
+    post:
+      tags: [Auth]
+      summary: Request password reset email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Reset email sent (always returns 200 to prevent enumeration)
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current authenticated user info
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ===========================================================================
+  # PROFILES
+  # ===========================================================================
+  /profiles:
+    post:
+      tags: [Profiles]
+      summary: Create seafarer profile
+      description: Creates a new professional profile. Only users with SEAFARER role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileCreate'
+      responses:
+        '201':
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '403':
+          description: Not a seafarer account
+
+  /profiles/{id}:
+    get:
+      tags: [Profiles]
+      summary: Get seafarer profile by ID
+      description: |
+        Returns full profile. Shipowners and agents see the public view 
+        (triggers a profile_view event). Seafarer sees their own editable view.
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      responses:
+        '200':
+          description: Profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          description: Profile not found
+
+    put:
+      tags: [Profiles]
+      summary: Update seafarer profile
+      description: Only the profile owner can update. Updates profile_completeness automatically.
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '403':
+          description: Not profile owner
+
+  /profiles/{id}/photo:
+    put:
+      tags: [Profiles]
+      summary: Upload or replace profile photo
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JPEG or PNG, max 5MB
+      responses:
+        '200':
+          description: Photo uploaded, returns new URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  photo_url:
+                    type: string
+
+  /profiles/me:
+    get:
+      tags: [Profiles]
+      summary: Get current user's profile
+      responses:
+        '200':
+          description: Own profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+  # ===========================================================================
+  # SEA SERVICE
+  # ===========================================================================
+  /profiles/{id}/sea-service:
+    get:
+      tags: [Sea Service]
+      summary: List all sea service records for a profile
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      responses:
+        '200':
+          description: Sea service history (sorted by start_date desc)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SeaService'
+
+    post:
+      tags: [Sea Service]
+      summary: Add sea service record
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SeaServiceCreate'
+      responses:
+        '201':
+          description: Record added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeaService'
+
+  /profiles/{id}/sea-service/{serviceId}:
+    put:
+      tags: [Sea Service]
+      summary: Update sea service record
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SeaServiceCreate'
+      responses:
+        '200':
+          description: Record updated
+
+    delete:
+      tags: [Sea Service]
+      summary: Delete sea service record
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Record deleted
+
+  # ===========================================================================
+  # CERTIFICATES
+  # ===========================================================================
+  /profiles/{id}/certificates:
+    get:
+      tags: [Certificates]
+      summary: List all certificates for a profile
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      responses:
+        '200':
+          description: Certificate list with status badges (valid/expiring/expired)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Certificate'
+
+    post:
+      tags: [Certificates]
+      summary: Upload and register a new certificate
+      description: |
+        Uploads the certificate document to Azure Blob Storage and creates the 
+        database record. Optionally triggers AI verification via the Python microservice.
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cert_type, cert_name, file]
+              properties:
+                cert_type:
+                  $ref: '#/components/schemas/CertType'
+                cert_name:
+                  type: string
+                  example: STCW Basic Safety Training
+                issuing_authority:
+                  type: string
+                  example: MARINA
+                issue_date:
+                  type: string
+                  format: date
+                expiry_date:
+                  type: string
+                  format: date
+                file:
+                  type: string
+                  format: binary
+                  description: PDF or image scan, max 10MB
+                request_ai_verification:
+                  type: boolean
+                  default: true
+      responses:
+        '201':
+          description: Certificate registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certificate'
+
+  /profiles/{id}/certificates/{certId}/verify:
+    post:
+      tags: [Certificates]
+      summary: Request AI verification of a certificate
+      description: |
+        Sends the certificate document to the Python AI microservice for 
+        OCR + anomaly detection. Updates ai_verified status asynchronously.
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+        - name: certId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Verification request accepted (async processing)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: processing
+                  estimated_seconds:
+                    type: integer
+                    example: 30
+
+  # ===========================================================================
+  # SKILLS
+  # ===========================================================================
+  /profiles/{id}/skills:
+    get:
+      tags: [Skills]
+      summary: List skills for a profile
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      responses:
+        '200':
+          description: Skills with endorsement counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Skill'
+
+    post:
+      tags: [Skills]
+      summary: Add a skill to profile
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [skill_name]
+              properties:
+                skill_name:
+                  type: string
+                  example: ECDIS
+      responses:
+        '201':
+          description: Skill added
+
+  # ===========================================================================
+  # SEARCH (Talent Discovery)
+  # ===========================================================================
+  /search/candidates:
+    post:
+      tags: [Search]
+      summary: Search and rank seafarer candidates
+      description: |
+        The primary talent discovery endpoint for shipowners. Applies filters, 
+        then calls the Python AI microservice to compute compatibility scores. 
+        Results are ranked by AI score (descending) by default.
+        
+        **Legal note**: This is talent discovery for the employer, NOT job referral 
+        to the seafarer. The seafarer does not receive notifications from this search.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Ranked candidate results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '403':
+          description: Only shipowners and agents can search
+
+  /search/autocomplete:
+    get:
+      tags: [Search]
+      summary: Autocomplete suggestions for search filters
+      parameters:
+        - name: field
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [rank, vessel_type, nationality, skill, company]
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+      responses:
+        '200':
+          description: Matching suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /search/saved:
+    get:
+      tags: [Search]
+      summary: List saved searches
+      responses:
+        '200':
+          description: User's saved search configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SavedSearch'
+
+    post:
+      tags: [Search]
+      summary: Save a search configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, filters]
+              properties:
+                name:
+                  type: string
+                  example: 3rd Officers - Tanker - Filipino
+                filters:
+                  $ref: '#/components/schemas/SearchFilters'
+      responses:
+        '201':
+          description: Search saved
+
+  # ===========================================================================
+  # SHORTLISTS
+  # ===========================================================================
+  /shortlists:
+    get:
+      tags: [Shortlists]
+      summary: List shortlists for current user
+      description: |
+        Shipowners see their own shortlists. Manning agents see shortlists 
+        forwarded to them.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, sent_to_agent, closed]
+      responses:
+        '200':
+          description: List of shortlists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Shortlist'
+
+    post:
+      tags: [Shortlists]
+      summary: Create a new shortlist
+      description: Only shipowners can create shortlists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShortlistCreate'
+      responses:
+        '201':
+          description: Shortlist created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shortlist'
+
+  /shortlists/{id}:
+    get:
+      tags: [Shortlists]
+      summary: Get shortlist with candidates
+      parameters:
+        - $ref: '#/components/parameters/ShortlistId'
+      responses:
+        '200':
+          description: Shortlist details with candidate list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortlistDetail'
+
+  /shortlists/{id}/candidates:
+    post:
+      tags: [Shortlists]
+      summary: Add candidate to shortlist
+      parameters:
+        - $ref: '#/components/parameters/ShortlistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profile_id]
+              properties:
+                profile_id:
+                  type: string
+                  format: uuid
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Candidate added with AI score computed
+
+  /shortlists/{id}/candidates/{candidateId}:
+    put:
+      tags: [Shortlists]
+      summary: Update candidate status in shortlist
+      description: |
+        Move candidate through pipeline: shortlisted → under_review → sent_to_agent
+      parameters:
+        - $ref: '#/components/parameters/ShortlistId'
+        - name: candidateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [shortlisted, under_review, sent_to_agent, rejected]
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Status updated
+
+    delete:
+      tags: [Shortlists]
+      summary: Remove candidate from shortlist
+      parameters:
+        - $ref: '#/components/parameters/ShortlistId'
+        - name: candidateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Candidate removed
+
+  /shortlists/{id}/forward:
+    post:
+      tags: [Shortlists]
+      summary: Forward shortlist to manning agent
+      description: |
+        The critical handoff point — where HireHub's role ends and the licensed 
+        agent's work begins. Changes shortlist status to sent_to_agent, creates 
+        agent_pipeline entries, and notifies the agent.
+      parameters:
+        - $ref: '#/components/parameters/ShortlistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agent_company_id]
+              properties:
+                agent_company_id:
+                  type: string
+                  format: uuid
+                  description: DMW-licensed manning agent company ID
+                urgency:
+                  type: string
+                  enum: [standard, urgent, critical]
+                  default: standard
+                notes:
+                  type: string
+                  description: Instructions for the manning agent
+      responses:
+        '200':
+          description: Shortlist forwarded to agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shortlist'
+        '400':
+          description: Agent not DMW-verified
+
+  # ===========================================================================
+  # MESSAGING
+  # ===========================================================================
+  /threads:
+    get:
+      tags: [Messaging]
+      summary: List message threads
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Thread list with last message preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedThreads'
+
+    post:
+      tags: [Messaging]
+      summary: Create a new thread (start conversation)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipient_id, body]
+              properties:
+                recipient_id:
+                  type: string
+                  format: uuid
+                body:
+                  type: string
+                  maxLength: 5000
+                shortlist_id:
+                  type: string
+                  format: uuid
+                  description: Optional — links thread to shortlist for context banner
+      responses:
+        '201':
+          description: Thread created with first message
+
+  /threads/{id}/messages:
+    get:
+      tags: [Messaging]
+      summary: Get messages in a thread
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: before
+          in: query
+          schema:
+            type: string
+            format: date-time
+            description: Cursor for pagination (get messages before this timestamp)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Messages in chronological order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+
+    post:
+      tags: [Messaging]
+      summary: Send a message in a thread
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  maxLength: 5000
+      responses:
+        '201':
+          description: Message sent
+
+  /threads/{id}/read:
+    put:
+      tags: [Messaging]
+      summary: Mark thread as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Thread marked as read
+
+  # ===========================================================================
+  # COMPANIES
+  # ===========================================================================
+  /companies:
+    post:
+      tags: [Companies]
+      summary: Create company profile
+      description: For shipowner or manning agent users. Manning agents must provide DMW license.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyCreate'
+      responses:
+        '201':
+          description: Company created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+
+  /companies/{id}:
+    get:
+      tags: [Companies]
+      summary: Get company profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Company details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+
+    put:
+      tags: [Companies]
+      summary: Update company profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyCreate'
+      responses:
+        '200':
+          description: Company updated
+
+  /companies/{id}/verify-dmw:
+    post:
+      tags: [Companies]
+      summary: Verify manning agent DMW license
+      description: |
+        Checks the DMW license number against the Department of Migrant Workers 
+        registry. Sets dmw_verified status. Required before agents can receive 
+        shortlist forwards.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dmw_verified:
+                    type: boolean
+                  license_status:
+                    type: string
+                    example: active
+                  verified_at:
+                    type: string
+                    format: date-time
+
+  # ===========================================================================
+  # VESSELS
+  # ===========================================================================
+  /companies/{id}/vessels:
+    get:
+      tags: [Vessels]
+      summary: List vessels in fleet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Fleet list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vessel'
+
+    post:
+      tags: [Vessels]
+      summary: Add vessel to fleet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VesselCreate'
+      responses:
+        '201':
+          description: Vessel added
+
+  # ===========================================================================
+  # FEED
+  # ===========================================================================
+  /feed:
+    get:
+      tags: [Feed]
+      summary: Get home feed posts
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Feed posts sorted by relevance and recency
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedPosts'
+
+  /posts:
+    post:
+      tags: [Feed]
+      summary: Create a new post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        '201':
+          description: Post created
+
+  /posts/{id}/like:
+    post:
+      tags: [Feed]
+      summary: Like a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Post liked
+
+    delete:
+      tags: [Feed]
+      summary: Unlike a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Post unliked
+
+  /posts/{id}/comments:
+    get:
+      tags: [Feed]
+      summary: Get comments on a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Comments list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+
+    post:
+      tags: [Feed]
+      summary: Add comment to a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  maxLength: 2000
+      responses:
+        '201':
+          description: Comment added
+
+  # ===========================================================================
+  # NOTIFICATIONS
+  # ===========================================================================
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get notifications for current user
+      parameters:
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Notifications list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedNotifications'
+
+  /notifications/read-all:
+    put:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      responses:
+        '200':
+          description: All notifications marked as read
+
+  # ===========================================================================
+  # ANALYTICS
+  # ===========================================================================
+  /analytics/profile:
+    get:
+      tags: [Analytics]
+      summary: Get profile analytics for current seafarer
+      description: Profile views, shortlist additions, search appearances over time.
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d]
+            default: 30d
+      responses:
+        '200':
+          description: Profile analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileAnalytics'
+
+  /analytics/search:
+    get:
+      tags: [Analytics]
+      summary: Get search analytics for shipowner
+      description: Search activity, shortlist conversion, candidate pool insights.
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d]
+            default: 30d
+      responses:
+        '200':
+          description: Search analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchAnalytics'
+
+  /analytics/agent:
+    get:
+      tags: [Analytics]
+      summary: Get agent dashboard metrics
+      description: Incoming requests, pipeline status, placement rate, deployment stats.
+      responses:
+        '200':
+          description: Agent analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAnalytics'
+
+  # ===========================================================================
+  # AI (Internal — proxied to Python FastAPI microservice)
+  # ===========================================================================
+  /ai/score:
+    post:
+      tags: [AI (Internal)]
+      summary: Compute AI compatibility scores for candidates
+      description: |
+        Internal endpoint. Called by the search service to score candidates against 
+        search criteria. Proxied to Python FastAPI microservice.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profile_ids, criteria]
+              properties:
+                profile_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                criteria:
+                  $ref: '#/components/schemas/SearchFilters'
+      responses:
+        '200':
+          description: Scores computed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AIScore'
+
+  /ai/verify-certificate:
+    post:
+      tags: [AI (Internal)]
+      summary: AI verification of certificate document
+      description: |
+        Sends certificate scan to Python microservice for OCR + anomaly detection.
+        Returns verification result and confidence score.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [certificate_id, document_url]
+              properties:
+                certificate_id:
+                  type: string
+                  format: uuid
+                document_url:
+                  type: string
+                  description: Azure Blob Storage URL
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified:
+                    type: boolean
+                  confidence:
+                    type: number
+                    example: 0.94
+                  flags:
+                    type: array
+                    items:
+                      type: string
+                    example: []
+                  extracted_data:
+                    type: object
+                    description: OCR-extracted fields (cert_name, issuer, dates)
+
+  # ===========================================================================
+  # CONSENT (Data Privacy Act compliance)
+  # ===========================================================================
+  /consent:
+    get:
+      tags: [Auth]
+      summary: Get current consent status
+      description: Returns all consent records for the authenticated user.
+      responses:
+        '200':
+          description: Consent records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsentRecord'
+
+    post:
+      tags: [Auth]
+      summary: Grant or withdraw consent
+      description: |
+        Records consent actions per NPC Circular 2023-04. Required for 
+        data processing, AI processing, and cross-border data transfers.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [consent_type, granted]
+              properties:
+                consent_type:
+                  type: string
+                  enum: [data_processing, ai_processing, cross_border, marketing]
+                granted:
+                  type: boolean
+      responses:
+        '200':
+          description: Consent recorded
+
+# =============================================================================
+# COMPONENTS
+# =============================================================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ProfileId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Seafarer profile UUID
+
+    ShortlistId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Shortlist UUID
+
+  schemas:
+    # Enums
+    UserRole:
+      type: string
+      enum: [seafarer, shipowner, manning_agent]
+
+    CertType:
+      type: string
+      enum: [COC, STCW, COP, FLAG_ENDORSEMENT, GMDSS, MEDICAL, BASIC_SAFETY, OTHER]
+
+    VesselType:
+      type: string
+      enum: [oil_tanker, chemical_tanker, oil_chemical_tanker, bulk_carrier, container, lpg, lng, general_cargo, roro, passenger, offshore, other]
+
+    # Auth
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+        email_verified:
+          type: boolean
+        subscription:
+          type: string
+          enum: [free, premium, enterprise]
+        created_at:
+          type: string
+          format: date-time
+
+    # Profile
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+          example: Juan Dela Cruz
+        nationality:
+          type: string
+          example: Filipino
+        date_of_birth:
+          type: string
+          format: date
+        current_rank:
+          type: string
+          example: 3rd Officer
+        photo_url:
+          type: string
+        bio:
+          type: string
+        verified_status:
+          type: boolean
+        profile_completeness:
+          type: integer
+          minimum: 0
+          maximum: 100
+        available_from:
+          type: string
+          format: date
+        contract_preference:
+          type: string
+        desired_rank:
+          type: string
+        preferred_vessel_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/VesselType'
+        profile_views_count:
+          type: integer
+        shortlist_count:
+          type: integer
+        inquiry_count:
+          type: integer
+        sea_service:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeaService'
+        certificates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Certificate'
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProfileCreate:
+      type: object
+      required: [full_name, nationality, current_rank]
+      properties:
+        full_name:
+          type: string
+        nationality:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        current_rank:
+          type: string
+        bio:
+          type: string
+        available_from:
+          type: string
+          format: date
+        contract_preference:
+          type: string
+        desired_rank:
+          type: string
+        preferred_vessel_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/VesselType'
+        passport_no:
+          type: string
+        seamans_book_no:
+          type: string
+
+    ProfileUpdate:
+      type: object
+      properties:
+        full_name:
+          type: string
+        nationality:
+          type: string
+        current_rank:
+          type: string
+        bio:
+          type: string
+        available_from:
+          type: string
+          format: date
+        contract_preference:
+          type: string
+        desired_rank:
+          type: string
+        preferred_vessel_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/VesselType'
+
+    # Sea Service
+    SeaService:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vessel_name:
+          type: string
+          example: MT Pacific Voyager
+        vessel_type:
+          $ref: '#/components/schemas/VesselType'
+        dwt:
+          type: integer
+          example: 115000
+        flag_state:
+          type: string
+          example: Marshall Islands
+        rank_held:
+          type: string
+          example: 3rd Officer
+        company_name:
+          type: string
+          example: Tsakos Energy Navigation
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        is_current:
+          type: boolean
+
+    SeaServiceCreate:
+      type: object
+      required: [vessel_name, vessel_type, rank_held, start_date]
+      properties:
+        vessel_name:
+          type: string
+        vessel_type:
+          $ref: '#/components/schemas/VesselType'
+        dwt:
+          type: integer
+        flag_state:
+          type: string
+        rank_held:
+          type: string
+        company_name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        is_current:
+          type: boolean
+          default: false
+
+    # Certificate
+    Certificate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        cert_type:
+          $ref: '#/components/schemas/CertType'
+        cert_name:
+          type: string
+        issuing_authority:
+          type: string
+        issue_date:
+          type: string
+          format: date
+        expiry_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [valid, expiring, expired, revoked]
+        ai_verified:
+          type: boolean
+        document_url:
+          type: string
+
+    # Skill
+    Skill:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        skill_name:
+          type: string
+          example: ECDIS
+        endorsement_count:
+          type: integer
+
+    # Search
+    SearchFilters:
+      type: object
+      properties:
+        rank:
+          type: string
+          example: 3rd Officer
+        vessel_type:
+          $ref: '#/components/schemas/VesselType'
+        min_sea_service_years:
+          type: integer
+          minimum: 0
+        nationality:
+          type: string
+        available_within_days:
+          type: integer
+          enum: [30, 60, 90]
+        verified_only:
+          type: boolean
+          default: false
+        has_flag_endorsement:
+          type: boolean
+        valid_medical:
+          type: boolean
+        skills:
+          type: array
+          items:
+            type: string
+
+    SearchRequest:
+      type: object
+      required: [filters]
+      properties:
+        filters:
+          $ref: '#/components/schemas/SearchFilters'
+        sort_by:
+          type: string
+          enum: [ai_score, sea_service, availability, recently_active]
+          default: ai_score
+        page:
+          type: integer
+          default: 0
+        size:
+          type: integer
+          default: 20
+
+    SearchResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 143
+        page:
+          type: integer
+        size:
+          type: integer
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidateCard'
+
+    CandidateCard:
+      type: object
+      description: Compact candidate representation for search results and shortlists
+      properties:
+        profile_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        photo_url:
+          type: string
+        current_rank:
+          type: string
+        nationality:
+          type: string
+        years_experience:
+          type: number
+        vessel_types:
+          type: array
+          items:
+            type: string
+        verified_status:
+          type: boolean
+        available_from:
+          type: string
+          format: date
+        ai_score:
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 87.5
+        key_certificates:
+          type: array
+          items:
+            type: string
+          example: [COC, STCW, Tanker Familiarization]
+
+    SavedSearch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        filters:
+          $ref: '#/components/schemas/SearchFilters'
+        result_count:
+          type: integer
+        last_run_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    # Shortlists
+    Shortlist:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: 3rd Officer — Oil/Chemical Tanker
+        vessel_context:
+          type: string
+          example: MT Pacific Voyager replacement
+        status:
+          type: string
+          enum: [active, sent_to_agent, closed]
+        urgency:
+          type: string
+          enum: [standard, urgent, critical]
+        candidate_count:
+          type: integer
+        agent_company:
+          $ref: '#/components/schemas/CompanySummary'
+        created_at:
+          type: string
+          format: date-time
+        forwarded_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ShortlistCreate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        vessel_context:
+          type: string
+        vessel_id:
+          type: string
+          format: uuid
+        agent_company_id:
+          type: string
+          format: uuid
+        crew_change_date:
+          type: string
+          format: date
+
+    ShortlistDetail:
+      allOf:
+        - $ref: '#/components/schemas/Shortlist'
+        - type: object
+          properties:
+            candidates:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/CandidateCard'
+                  - type: object
+                    properties:
+                      shortlist_candidate_id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum: [shortlisted, under_review, sent_to_agent, rejected]
+                      notes:
+                        type: string
+                      added_at:
+                        type: string
+                        format: date-time
+            avg_ai_score:
+              type: number
+
+    # Messaging
+    Thread:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              user_id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              role:
+                $ref: '#/components/schemas/UserRole'
+              photo_url:
+                type: string
+        shortlist_context:
+          type: object
+          nullable: true
+          properties:
+            shortlist_id:
+              type: string
+              format: uuid
+            title:
+              type: string
+              example: Juan is on your shortlist for MT Pacific Voyager (3rd Officer)
+        last_message:
+          $ref: '#/components/schemas/Message'
+        unread_count:
+          type: integer
+        last_message_at:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        sender_name:
+          type: string
+        body:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+
+    PagedThreads:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        threads:
+          type: array
+          items:
+            $ref: '#/components/schemas/Thread'
+
+    # Company
+    Company:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Tsakos Energy Navigation
+        type:
+          type: string
+          enum: [shipowner, manning_agent]
+        country:
+          type: string
+        city:
+          type: string
+        dmw_license_no:
+          type: string
+          nullable: true
+        dmw_verified:
+          type: boolean
+        fleet_size:
+          type: integer
+        principals_count:
+          type: integer
+        logo_url:
+          type: string
+        website:
+          type: string
+        deployments_ytd:
+          type: integer
+        placement_rate:
+          type: number
+
+    CompanySummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+        dmw_license_no:
+          type: string
+        dmw_verified:
+          type: boolean
+
+    CompanyCreate:
+      type: object
+      required: [name, type, country]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [shipowner, manning_agent]
+        country:
+          type: string
+        city:
+          type: string
+        dmw_license_no:
+          type: string
+          description: Required for manning agents
+        fleet_size:
+          type: integer
+        website:
+          type: string
+        description:
+          type: string
+
+    # Vessel
+    Vessel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/VesselType'
+        dwt:
+          type: integer
+        flag_state:
+          type: string
+        imo_number:
+          type: string
+        year_built:
+          type: integer
+        crew_capacity:
+          type: integer
+
+    VesselCreate:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/VesselType'
+        dwt:
+          type: integer
+        flag_state:
+          type: string
+        imo_number:
+          type: string
+        year_built:
+          type: integer
+        crew_capacity:
+          type: integer
+
+    # Feed
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        author:
+          type: object
+          properties:
+            user_id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            title:
+              type: string
+            photo_url:
+              type: string
+        type:
+          type: string
+          enum: [text, article, certificate, photo]
+        body:
+          type: string
+        image_url:
+          type: string
+        likes_count:
+          type: integer
+        comments_count:
+          type: integer
+        shares_count:
+          type: integer
+        liked_by_me:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    PostCreate:
+      type: object
+      required: [body]
+      properties:
+        type:
+          type: string
+          enum: [text, article, certificate, photo]
+          default: text
+        body:
+          type: string
+          maxLength: 10000
+        image_url:
+          type: string
+        certificate_id:
+          type: string
+          format: uuid
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        user_name:
+          type: string
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    PagedPosts:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+
+    # Notifications
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [profile_view, shortlist_add, message, match, system]
+        title:
+          type: string
+        body:
+          type: string
+        action_url:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    PagedNotifications:
+      type: object
+      properties:
+        total:
+          type: integer
+        unread_count:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+
+    # Analytics
+    ProfileAnalytics:
+      type: object
+      properties:
+        period:
+          type: string
+        total_views:
+          type: integer
+        total_shortlists:
+          type: integer
+        total_search_appearances:
+          type: integer
+        daily_views:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+        top_viewers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanySummary'
+
+    SearchAnalytics:
+      type: object
+      properties:
+        period:
+          type: string
+        total_searches:
+          type: integer
+        total_candidates_viewed:
+          type: integer
+        total_shortlisted:
+          type: integer
+        conversion_rate:
+          type: number
+          description: Percentage of viewed candidates that were shortlisted
+
+    AgentAnalytics:
+      type: object
+      properties:
+        new_requests:
+          type: integer
+        active_pipelines:
+          type: integer
+        candidates_in_review:
+          type: integer
+        placement_rate:
+          type: number
+        deployments_ytd:
+          type: integer
+        pipeline_by_stage:
+          type: object
+          properties:
+            received:
+              type: integer
+            vetting:
+              type: integer
+            contract:
+              type: integer
+            deployment:
+              type: integer
+
+    # AI
+    AIScore:
+      type: object
+      properties:
+        profile_id:
+          type: string
+          format: uuid
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+        criteria_breakdown:
+          type: object
+          properties:
+            rank_match:
+              type: number
+            experience:
+              type: number
+            certificates:
+              type: number
+            vessel_type:
+              type: number
+            availability:
+              type: number
+        computed_at:
+          type: string
+          format: date-time
+
+    # Consent
+    ConsentRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        consent_type:
+          type: string
+        consent_version:
+          type: string
+        granted:
+          type: boolean
+        granted_at:
+          type: string
+          format: date-time
+        withdrawn_at:
+          type: string
+          format: date-time
+          nullable: true
