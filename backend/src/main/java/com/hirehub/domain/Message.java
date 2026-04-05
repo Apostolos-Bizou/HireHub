@@ -30,5 +30,5 @@ public class Message extends BaseEntity {
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default
-    private boolean isDeleted = false;
+    private boolean deleted = false;
 }

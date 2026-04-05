@@ -30,6 +30,6 @@ public class MessageThreadResponse {
         private String senderName;
         private String body;
         private Instant sentAt;
-        private boolean isDeleted;
+        private boolean deleted;
     }
 }

@@ -28,5 +28,5 @@ public class ThreadParticipant extends BaseEntity {
 
     @Column(name = "is_muted", nullable = false)
     @Builder.Default
-    private boolean isMuted = false;
+    private boolean muted = false;
 }

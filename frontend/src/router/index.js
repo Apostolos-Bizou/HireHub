@@ -51,6 +51,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['MANNING_AGENT', 'ADMIN'] }
   },
   {
+    path: '/analytics',
+    name: 'Analytics',
+    component: () => import('@/views/AnalyticsDashboardView.vue'),
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
+  },
+  {
     path: '/messages',
     name: 'Messages',
     component: () => import('@/views/MessagesView.vue'),

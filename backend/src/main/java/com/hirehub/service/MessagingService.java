@@ -122,7 +122,7 @@ public class MessagingService {
                                 .senderName(m.getSender().getEmail())
                                 .body(m.isDeleted() ? "[Message deleted]" : m.getBody())
                                 .sentAt(m.getSentAt())
-                                .isDeleted(m.isDeleted())
+                                .deleted(m.isDeleted())
                                 .build())
                         .toList())
                 .build();
