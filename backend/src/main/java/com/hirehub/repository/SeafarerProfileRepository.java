@@ -19,6 +19,8 @@ public interface SeafarerProfileRepository extends JpaRepository<SeafarerProfile
 
     Optional<SeafarerProfile> findByUserId(UUID userId);
 
+    long countByVerifiedStatus(VerifiedStatus status);
+
     @Query("""
         SELECT p FROM SeafarerProfile p
         WHERE (:rank IS NULL OR LOWER(p.currentRank) = LOWER(:rank))

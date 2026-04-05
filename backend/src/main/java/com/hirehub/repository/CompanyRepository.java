@@ -2,6 +2,8 @@ package com.hirehub.repository;
 
 import com.hirehub.domain.Company;
 import com.hirehub.domain.enums.CompanyType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,5 +13,6 @@ import java.util.UUID;
 public interface CompanyRepository extends JpaRepository<Company, UUID> {
     Optional<Company> findByUserId(UUID userId);
     List<Company> findByCompanyType(CompanyType type);
+    Page<Company> findByCompanyType(CompanyType type, Pageable pageable);
     Optional<Company> findByDmwLicenseNumber(String licenseNumber);
 }

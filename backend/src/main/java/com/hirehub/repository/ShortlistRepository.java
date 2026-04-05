@@ -12,4 +12,5 @@ public interface ShortlistRepository extends JpaRepository<Shortlist, UUID> {
     Page<Shortlist> findByOwnerIdAndStatus(UUID ownerId, ShortlistStatus status, Pageable pageable);
     Page<Shortlist> findByOwnerId(UUID ownerId, Pageable pageable);
     Page<Shortlist> findByAgentId(UUID agentId, Pageable pageable);
+    long countByStatus(ShortlistStatus status);
 }

@@ -58,6 +58,9 @@ public class SecurityConfig {
                 // Manning agent only
                 .requestMatchers("/agent/**").hasAnyRole("MANNING_AGENT", "ADMIN")
 
+                // Admin only
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+
                 // Authenticated users
                 .anyRequest().authenticated()
             )

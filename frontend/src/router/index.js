@@ -57,6 +57,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
   },
   {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@/views/AdminView.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN'] }
+  },
+  {
     path: '/messages',
     name: 'Messages',
     component: () => import('@/views/MessagesView.vue'),

@@ -34,6 +34,11 @@ const navItems = computed(() => {
       { icon: '📊', label: 'Dashboard', to: '/agent', active: route.path === '/agent' }
     )
   }
+  if (auth.user?.role === 'ADMIN') {
+    items.push(
+      { icon: '🛡️', label: 'Admin', to: '/admin', active: route.path === '/admin' }
+    )
+  }
   items.push(
     { icon: '💬', label: 'Messages', to: '/messages', active: route.path === '/messages' },
     { icon: '🔔', label: 'Alerts', to: '/notifications', active: route.path === '/notifications', badge: notif.unreadCount },
