@@ -74,7 +74,8 @@ const openings = [
     <main class="feed-main">
       <div class="card post-create">
         <div class="post-create-row">
-          <div class="avatar avatar-md avatar-owner">{{ initials(auth.user?.fullName) }}</div>
+          <img v-if="userPhoto" :src="userPhoto" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" />
+          <div v-else class="avatar avatar-md avatar-owner">{{ initials(auth.user?.fullName) }}</div>
           <input class="input" v-model="newPost" placeholder="Start a post..." @keyup.enter="createPost" />
         </div>
         <div class="post-actions">
@@ -185,6 +186,7 @@ const openings = [
 
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
+
 
 
 
