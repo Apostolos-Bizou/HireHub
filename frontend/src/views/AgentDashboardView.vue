@@ -1,377 +1,123 @@
 <script setup>
 import { ref } from 'vue'
+const activeTab = ref(0)
+const tabs = ['Shortlist analyzer', 'Deployment readiness', 'Principal matching', 'Crew calendar', 'Compliance']
+const expandedCandidate = ref(null)
 
-const requests = ref([
-  { id: 1, owner: "Tsakos Energy Navigation", ownerInitials: "TE", position: "3rd Officer — Oil Tanker", vessel: "MT Athens Glory", dwt: "115,000 DWT", crewChangeDate: "May 15, 2026", candidates: 3, urgency: "Urgent", location: "Piraeus, Greece", timestamp: "2 hours ago" },
-  { id: 2, owner: "Diana Shipping", ownerInitials: "DS", position: "Chief Engineer — Bulk Carrier", vessel: "MV Diana Explorer", dwt: "82,000 DWT", crewChangeDate: "Jun 1, 2026", candidates: 5, urgency: "Standard", location: "Athens, Greece", timestamp: "Yesterday" },
-  { id: 3, owner: "Capital Ship Management", ownerInitials: "CS", position: "2nd Officer — Container", vessel: "MV Capital Fortune", dwt: "65,000 DWT", crewChangeDate: "May 20, 2026", candidates: 2, urgency: "Urgent", location: "Piraeus, Greece", timestamp: "3 hours ago" },
-  { id: 4, owner: "Costamare Inc.", ownerInitials: "CI", position: "Bosun — Container", vessel: "MV Cosco Hellas", dwt: "48,000 DWT", crewChangeDate: "Jul 10, 2026", candidates: 4, urgency: "Standard", location: "Athens, Greece", timestamp: "2 days ago" }
-])
-
-const pipeline = ref({
-  received: [
-    { name: "Juan Dela Cruz", rank: "3rd Officer", owner: "Tsakos", aiScore: 92 },
-    { name: "Paolo Castillo", rank: "3rd Officer", owner: "Capital Ship", aiScore: 76 },
-    { name: "Lazar Stoyanov", rank: "AB", owner: "Costamare", aiScore: 68 }
-  ],
-  vetting: [
-    { name: "Ruslan Goncharov", rank: "2nd Officer", owner: "Diana", aiScore: 87 },
-    { name: "Andrei Marinescu", rank: "Chief Officer", owner: "Tsakos", aiScore: 81 },
-    { name: "Dmitry Petrov", rank: "Chief Engineer", owner: "Diana", aiScore: 95 },
-    { name: "Miguel Santos", rank: "2nd Engineer", owner: "Capital Ship", aiScore: 89 },
-    { name: "Chen Wei", rank: "Oiler", owner: "Costamare", aiScore: 72 }
-  ],
-  contract: [
-    { name: "Yuri Kovalenko", rank: "3rd Officer", owner: "Tsakos", aiScore: 88 },
-    { name: "Radu Ionescu", rank: "AB", owner: "Diana", aiScore: 74 }
-  ],
-  deployment: [
-    { name: "Mark Reyes", rank: "Bosun", owner: "Capital Ship", aiScore: 85 },
-    { name: "Ivan Kolev", rank: "Cook", owner: "Costamare", aiScore: 79 }
-  ]
-})
-
-const pipelineStages = [
-  { key: 'received', label: 'Received', color: 'var(--color-primary)' },
-  { key: 'vetting', label: 'Vetting', color: 'var(--color-accent)' },
-  { key: 'contract', label: 'Contract', color: 'var(--color-agent)' },
-  { key: 'deployment', label: 'Deployment', color: 'var(--color-success)' }
+const shortlists = [
+  { owner:'Varship Shipping Co.', i:'VS', color:'#E7A33E', time:'2h ago', urgency:'Urgent', position:'3rd Officer — Oil Tanker · MT Varship Glory · Crew change May 15', readyPct:67,
+    candidates:[{n:'Juan Dela Cruz',i:'JD',c:'#0A66C2',s:'Ready',sc:'r-green'},{n:'Ruslan Goncharov',i:'RG',c:'#E7A33E',s:'Flag needed',sc:'r-yellow'},{n:'Lazar Stoyanov',i:'LS',c:'#B71C1C',s:'STCW expired',sc:'r-red'}]},
+  { owner:'Diana Shipping', i:'DS', color:'#0A66C2', time:'Yesterday', urgency:'Standard', position:'Chief Engineer — Bulk Carrier · MV Diana Explorer · Crew change Jun 1', readyPct:80,
+    candidates:[{n:'Dmitry Petrov',i:'DP',c:'#1D9E75',s:'Ready',sc:'r-green'},{n:'Raj Patel',i:'RP',c:'#1D9E75',s:'Ready',sc:'r-green'},{n:'Miguel Santos',i:'MS',c:'#1D9E75',s:'Ready',sc:'r-green'},{n:'Chen Wei',i:'CW',c:'#E7A33E',s:'Medical due',sc:'r-yellow'}]}
 ]
-
-function scoreClass(s) { return s >= 85 ? "ai-score-high" : s >= 70 ? "ai-score-mid" : "ai-score-low" }
+const readiness = [
+  { n:'Juan Dela Cruz',i:'JD',c:'#0A66C2',rank:'3rd Officer',nat:'Filipino',yrs:4,ai:92,cr:87,dr:96,s:'Ready',sc:'r-green',
+    checks:[{t:'COC valid until Dec 2030',o:'g'},{t:'STCW valid until Aug 2028',o:'g'},{t:'Panama flag endorsement active',o:'g'},{t:'Medical valid until Sep 2026',o:'g'},{t:'Available May 2026',o:'g'}]},
+  { n:'Ruslan Goncharov',i:'RG',c:'#E7A33E',rank:'2nd Officer',nat:'Ukrainian',yrs:6,ai:87,cr:82,dr:68,s:'Action needed',sc:'r-yellow',
+    checks:[{t:'COC valid until Mar 2029',o:'g'},{t:'STCW valid until Nov 2027',o:'g'},{t:'Greece flag missing — est. 5 days',o:'y'},{t:'Medical valid until Jul 2026',o:'g'},{t:'Available Jun 2026',o:'g'}]},
+  { n:'Lazar Stoyanov',i:'LS',c:'#B71C1C',rank:'AB',nat:'Bulgarian',yrs:2,ai:68,cr:64,dr:32,s:'Not ready',sc:'r-red',
+    checks:[{t:'COC valid until Jun 2028',o:'g'},{t:'STCW expired Dec 2025 — renewal 2 weeks',o:'r'},{t:'Panama flag expired — renewal needed',o:'y'},{t:'Medical expired Jan 2026 — PEME required',o:'r'},{t:'Available May 2026',o:'g'}]}
+]
+const matches = [
+  {pct:94,cand:'Marco Villanueva',prin:'Varship Shipping',reason:'3rd Officer, tanker, Filipino, CrewScore 85, Panama flag',sc:'r-green'},
+  {pct:89,cand:'Oleksandr Boyko',prin:'Diana Shipping',reason:'Chief Engineer, bulk, Ukrainian, CrewScore 82, 10+ yrs',sc:'r-green'},
+  {pct:82,cand:'Rodel Santos',prin:'Capital Ship Mgmt',reason:'2nd Officer, container, Filipino, CrewScore 78',sc:'r-yellow'},
+  {pct:76,cand:'Ion Popescu',prin:'Costamare Inc.',reason:'Bosun, container, Romanian, CrewScore 74',sc:'r-yellow'}
+]
+const calendar = [
+  {vessel:'MT Varship Glory',owner:'Varship',rank:'3rd Officer',date:'May 15',days:39,cand:'Juan Dela Cruz',cost:2400,sc:'r-yellow'},
+  {vessel:'MV Diana Explorer',owner:'Diana',rank:'Chief Engineer',date:'Jun 1',days:56,cand:'Dmitry Petrov',cost:3100,sc:'r-yellow'},
+  {vessel:'MV Capital Fortune',owner:'Capital Ship',rank:'2nd Officer',date:'May 20',days:44,cand:'Andrei Marinescu',cost:2200,sc:'r-green'},
+  {vessel:'MV Cosco Hellas',owner:'Costamare',rank:'Bosun',date:'Jul 10',days:95,cand:'TBD',cost:null,sc:'r-red'},
+  {vessel:'MT Aegean Sun',owner:'Varship',rank:'AB',date:'May 28',days:52,cand:'Radu Ionescu',cost:1800,sc:'r-green'},
+  {vessel:'MT Parthenon',owner:'Diana',rank:'3rd Engineer',date:'Jun 15',days:70,cand:'TBD',cost:null,sc:'r-red'}
+]
+const alerts = [
+  {type:'urgent',text:'Lazar Stoyanov — STCW expired Dec 2025, cannot deploy'},
+  {type:'urgent',text:'Lazar Stoyanov — Medical expired Jan 2026'},
+  {type:'warn',text:'Ruslan Goncharov — Greece flag endorsement missing'},
+  {type:'warn',text:'Chen Wei — Medical due renewal in 45 days'},
+  {type:'warn',text:'Paolo Castillo — COC expires in 4 months'},
+  {type:'info',text:'DMW license renewal due in 180 days'},
+  {type:'info',text:'3 new STCW 2026 guidelines published'}
+]
+function daysClass(d){return d<=30?'days-u':d<=60?'days-w':'days-ok'}
 </script>
-
 <template>
-  <div class="container agent-layout">
-    <!-- Agency Header -->
-    <div class="agency-header card">
-      <div class="agency-info">
-        <div class="avatar avatar-lg avatar-agent">MA</div>
-        <div>
-          <h1 class="agency-name">Magsaysay Maritime Corp.</h1>
-          <div class="agency-meta">
-            <span class="badge badge-agent">DMW-1234-2026</span>
-            <span>8 principals served</span>
-            <span>·</span>
-            <span>487 deployments YTD</span>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="container ad">
+  <div class="ad-hdr"><div class="ad-hdr-l"><div class="avatar avatar-lg avatar-agent">MA</div><div><h1>Magsaysay Maritime Corp.</h1><p class="ad-sub">AI-powered deployment management · DMW-1234-2026</p></div></div></div>
+  <div class="kg"><div class="kc"><div class="kl">Incoming requests</div><div class="kv" style="color:#B71C1C">4</div><div class="kt">2 urgent</div></div><div class="kc"><div class="kl">In pipeline</div><div class="kv" style="color:#0A66C2">18</div><div class="kt ku">+5 this week</div></div><div class="kc"><div class="kl">Ready to deploy</div><div class="kv" style="color:#1B5E20">6</div><div class="kt ku">All verified</div></div><div class="kc"><div class="kl">Avg deploy time</div><div class="kv">8.4 days</div><div class="kt ku">-2.1 vs last month</div></div><div class="kc"><div class="kl">Placement rate</div><div class="kv" style="color:#1B5E20">94%</div><div class="kt ku">+3% vs Q1</div></div><div class="kc"><div class="kl">Principals</div><div class="kv" style="color:#0A66C2">8</div><div class="kt">All DMW-verified</div></div><div class="kc"><div class="kl">Deployments YTD</div><div class="kv" style="color:#1D9E75">487</div><div class="kt ku">+42 this month</div></div><div class="kc"><div class="kl">Avg CrewScore placed</div><div class="kv" style="color:#1D9E75">81</div><div class="kt ku">Above avg</div></div></div>
+  <div class="dtabs"><button v-for="(t,i) in tabs" :key="i" class="dtab" :class="{active:activeTab===i}" @click="activeTab=i">{{t}}</button></div>
 
-    <!-- Metrics Row -->
-    <div class="metrics-grid">
-      <div class="card metric-box">
-        <div class="metric-value metric-urgent">{{ requests.length }}</div>
-        <div class="metric-label">New requests</div>
-        <div class="metric-trend">+2 this week</div>
-      </div>
-      <div class="card metric-box">
-        <div class="metric-value">8</div>
-        <div class="metric-label">Active pipelines</div>
-        <div class="metric-trend">3 urgent</div>
-      </div>
-      <div class="card metric-box">
-        <div class="metric-value">15</div>
-        <div class="metric-label">In review</div>
-        <div class="metric-trend">5 ready for contract</div>
-      </div>
-      <div class="card metric-box">
-        <div class="metric-value metric-success">94%</div>
-        <div class="metric-label">Placement rate</div>
-        <div class="metric-trend">↑ 3% vs last quarter</div>
-      </div>
+  <div v-if="activeTab===0">
+    <div v-for="sl in shortlists" :key="sl.owner" class="card sec sl-card">
+      <div class="sl-top"><div class="sl-ow"><div class="sl-av" :style="{background:sl.color}">{{sl.i}}</div><div><strong>{{sl.owner}}</strong><span class="sl-tm">{{sl.time}} · {{sl.urgency}}</span></div></div><span class="rd" :class="sl.readyPct>=80?'rg':sl.readyPct>=50?'ry':'rr'">{{sl.readyPct}}% ready</span></div>
+      <div class="sl-pos">{{sl.position}}</div>
+      <div class="sl-bar"><div class="sl-fill" :style="{width:sl.readyPct+'%',background:sl.readyPct>=80?'#1B5E20':'#E7A33E'}"></div></div>
+      <div class="sl-cands"><div v-for="c in sl.candidates" :key="c.i" class="sl-c"><div class="sl-ca" :style="{background:c.c}">{{c.i}}</div>{{c.n}}<span class="rd" :class="c.sc">{{c.s}}</span></div></div>
+      <div class="sl-acts"><button class="btn btn-primary btn-sm">Review candidates</button><button class="btn btn-secondary btn-sm">Message owner</button></div>
     </div>
+  </div>
 
-    <!-- Incoming Shortlists -->
-    <div class="section-header">
-      <h2>
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Incoming Shortlists
-      </h2>
-      <span class="section-count">{{ requests.length }} pending</span>
-    </div>
-
-    <div class="shortlist-feed">
-      <div v-for="r in requests" :key="r.id" class="card request-card">
-        <div class="request-top">
-          <div class="request-owner">
-            <div class="avatar avatar-sm avatar-owner">{{ r.ownerInitials }}</div>
-            <div>
-              <strong>{{ r.owner }}</strong>
-              <span class="request-time">{{ r.timestamp }}</span>
-            </div>
-          </div>
-          <div class="request-badges">
-            <span class="badge" :class="r.urgency === 'Urgent' ? 'badge-danger' : 'badge-info'">{{ r.urgency }}</span>
-            <span class="badge badge-info">{{ r.candidates }} candidates</span>
-          </div>
-        </div>
-        <div class="request-details">
-          <div class="request-position">{{ r.position }}</div>
-          <div class="request-vessel">{{ r.vessel }} · {{ r.dwt }} · Crew change: {{ r.crewChangeDate }}</div>
-          <div class="request-location">{{ r.location }}</div>
-        </div>
-        <div class="request-actions">
-          <button class="btn btn-primary btn-sm">Review candidates</button>
-          <button class="btn btn-secondary btn-sm">Message owner</button>
-          <button class="btn btn-tertiary btn-sm">Decline</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Deployment Pipeline -->
-    <div class="section-header">
-      <h2>
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-        Deployment Pipeline
-      </h2>
-    </div>
-
-    <div class="pipeline-grid">
-      <div v-for="stage in pipelineStages" :key="stage.key" class="pipeline-column">
-        <div class="pipeline-header" :style="{ borderTopColor: stage.color }">
-          <span class="pipeline-stage-name">{{ stage.label }}</span>
-          <span class="pipeline-stage-count">{{ pipeline[stage.key].length }}</span>
-        </div>
-        <div class="pipeline-cards">
-          <div v-for="c in pipeline[stage.key]" :key="c.name" class="pipeline-card">
-            <div class="pipeline-card-top">
-              <div class="avatar avatar-sm avatar-seafarer">{{ c.name.split(' ').map(w=>w[0]).join('').substring(0,2) }}</div>
-              <div class="pipeline-card-info">
-                <strong>{{ c.name }}</strong>
-                <span>{{ c.rank }}</span>
-              </div>
-              <div class="ai-score ai-score-sm" :class="scoreClass(c.aiScore)">{{ c.aiScore }}</div>
-            </div>
-            <div class="pipeline-card-owner">{{ c.owner }}</div>
-          </div>
-        </div>
+  <div v-if="activeTab===1">
+    <div class="card sec">
+      <div class="dr-leg"><span><span class="dot dg"></span> Ready</span><span><span class="dot dy"></span> Needs action</span><span><span class="dot dr"></span> Not ready</span><span class="dr-r">AI · Crew · DR scores</span></div>
+      <div v-for="(c,ci) in readiness" :key="c.i" class="dr-cand" @click="expandedCandidate=expandedCandidate===ci?null:ci">
+        <div class="dr-row"><div class="dr-av" :style="{background:c.c}">{{c.i}}</div><div class="dr-inf"><strong>{{c.n}}</strong><span>{{c.rank}} · {{c.nat}} · {{c.yrs}} yrs</span></div><div class="dr-scs"><div class="dsc sai">{{c.ai}}</div><div class="dsc scr">{{c.cr}}</div><div class="dsc sdr">{{c.dr}}</div></div><span class="rd" :class="c.sc">{{c.s}}</span></div>
+        <div v-if="expandedCandidate===ci" class="dr-cks"><div v-for="ch in c.checks" :key="ch.t" class="dr-ck" :class="'ck-'+ch.o"><span class="dot" :class="'d'+ch.o"></span>{{ch.t}}</div></div>
       </div>
     </div>
   </div>
+
+  <div v-if="activeTab===2">
+    <div class="card sec">
+      <h2>AI principal matching</h2><p class="sec-sub">AI analyzes hiring history and preferences to suggest best matches.</p>
+      <div v-for="m in matches" :key="m.cand" class="pm-row"><div class="pm-pct">{{m.pct}}%</div><div class="pm-inf"><strong>{{m.cand}} → {{m.prin}}</strong><span>{{m.reason}}</span></div><span class="rd" :class="m.sc">{{m.pct>=85?'Auto-suggest':'Review'}}</span></div>
+    </div>
+  </div>
+
+  <div v-if="activeTab===3">
+    <div class="card sec">
+      <h2>Crew change calendar</h2><p class="sec-sub">Scheduled crew changes with AI cost estimation.</p>
+      <div class="cc-hd"><span class="cc1">Vessel</span><span class="cc2">Position</span><span class="cc3">Date</span><span class="cc4">Days</span><span class="cc5">Candidate</span><span class="cc6">Est. cost</span><span class="cc7">Status</span></div>
+      <div v-for="cc in calendar" :key="cc.vessel+cc.rank" class="cc-rw">
+        <div class="cc1"><strong>{{cc.vessel}}</strong><span>{{cc.owner}}</span></div>
+        <span class="cc2">{{cc.rank}}</span><span class="cc3">{{cc.date}}</span>
+        <span class="cc4" :class="daysClass(cc.days)">{{cc.days}}d</span>
+        <span class="cc5" :class="{cctbd:cc.cand==='TBD'}">{{cc.cand}}</span>
+        <span class="cc6">{{cc.cost?'$'+cc.cost.toLocaleString():'—'}}</span>
+        <span class="cc7"><span class="rd" :class="cc.sc">{{cc.cand==='TBD'?'Searching':cc.days<=45?'In progress':'Ready'}}</span></span>
+      </div>
+    </div>
+    <div class="tcol">
+      <div class="card sec"><h3>Cost breakdown (typical)</h3><div class="cr"><span>Medical (PEME)</span><strong>$350</strong></div><div class="cr"><span>Travel Manila→Piraeus</span><strong>$890</strong></div><div class="cr"><span>Flag endorsement</span><strong>$160</strong></div><div class="cr"><span>Visa processing</span><strong>$200</strong></div><div class="cr"><span>DMW/OEC processing</span><strong>$150</strong></div><div class="cr"><span>Insurance</span><strong>$250</strong></div><div class="cr"><span>Agency fee</span><strong>$400</strong></div><div class="cr crt"><span>Estimated total</span><strong>$2,400</strong></div></div>
+      <div class="card sec"><h3>Calendar summary</h3><div class="cr"><span>Next 30 days</span><strong style="color:#B71C1C">2 changes</strong></div><div class="cr"><span>30-60 days</span><strong style="color:#E65100">3 changes</strong></div><div class="cr"><span>60-90 days</span><strong>1 change</strong></div><div class="cr crt"><span>Pipeline cost</span><strong style="color:#0A66C2;font-size:18px">$13,700</strong></div></div>
+    </div>
+  </div>
+
+  <div v-if="activeTab===4">
+    <div class="tcol">
+      <div class="card sec"><h2>Compliance alerts</h2><div v-for="a in alerts" :key="a.text" class="al-item"><span class="al-badge" :class="'al-'+a.type">{{a.type==='urgent'?'Urgent':a.type==='warn'?'Warning':'Info'}}</span><p>{{a.text}}</p></div></div>
+      <div class="card sec"><h2>Pipeline performance</h2><div class="cr"><span>Avg received → vetting</span><strong>1.2 days</strong></div><div class="cr"><span>Avg vetting → contract</span><strong>3.8 days</strong></div><div class="cr"><span>Avg contract → deploy</span><strong>3.4 days</strong></div><div class="cr"><span>Total avg cycle</span><strong style="color:#1B5E20">8.4 days</strong></div><div class="cr"><span>Success rate</span><strong style="color:#1B5E20">94%</strong></div><div class="cr"><span>Deployments YTD</span><strong>487</strong></div><div class="cr"><span>Bottleneck</span><strong style="color:#E65100">Medical (5.2 days)</strong></div></div>
+    </div>
+  </div>
+</div>
 </template>
-
 <style scoped>
-.agent-layout {
-  padding-top: var(--space-5);
-  padding-bottom: var(--space-8);
-  max-width: 1128px;
-}
-
-/* --- Agency Header --- */
-.agency-header {
-  padding: var(--space-5);
-  margin-bottom: var(--space-4);
-}
-.agency-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-.agency-name {
-  font: var(--font-h1);
-}
-.agency-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-1);
-  font: var(--font-small);
-  color: var(--color-text-secondary);
-}
-
-/* --- Metrics --- */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-}
-.metric-box {
-  padding: var(--space-4);
-  text-align: center;
-}
-.metric-value {
-  font: var(--font-h1);
-  font-size: 28px;
-  color: var(--color-primary);
-}
-.metric-urgent { color: var(--color-danger); }
-.metric-success { color: var(--color-success); }
-.metric-label {
-  font: var(--font-small);
-  color: var(--color-text-secondary);
-  margin-top: var(--space-1);
-}
-.metric-trend {
-  font: var(--font-caption);
-  color: var(--color-text-tertiary);
-  margin-top: var(--space-1);
-}
-
-/* --- Section Header --- */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-3);
-}
-.section-header h2 {
-  font: var(--font-h2);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.section-count {
-  font: var(--font-small);
-  color: var(--color-text-secondary);
-}
-
-/* --- Shortlist Feed --- */
-.shortlist-feed {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-}
-.request-card {
-  padding: var(--space-4);
-}
-.request-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-3);
-}
-.request-owner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.request-owner strong {
-  font: var(--font-body);
-  font-weight: 600;
-  display: block;
-}
-.request-time {
-  font: var(--font-caption);
-  color: var(--color-text-tertiary);
-  display: block;
-}
-.request-badges {
-  display: flex;
-  gap: var(--space-2);
-}
-.request-details {
-  margin-bottom: var(--space-3);
-}
-.request-position {
-  font: var(--font-h3);
-  margin-bottom: 2px;
-}
-.request-vessel {
-  font: var(--font-small);
-  color: var(--color-text-secondary);
-}
-.request-location {
-  font: var(--font-caption);
-  color: var(--color-text-tertiary);
-  margin-top: 2px;
-}
-.request-actions {
-  display: flex;
-  gap: var(--space-2);
-}
-.btn-sm {
-  font-size: 12px;
-  padding: 6px 14px;
-}
-
-/* --- Pipeline --- */
-.pipeline-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-3);
-}
-.pipeline-column {
-  min-height: 200px;
-}
-.pipeline-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  border-top: 3px solid var(--color-primary);
-}
-.pipeline-stage-name {
-  font: var(--font-small);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-.pipeline-stage-count {
-  font: var(--font-caption);
-  font-weight: 600;
-  background: var(--color-white);
-  color: var(--color-text-secondary);
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-.pipeline-cards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding-top: var(--space-2);
-}
-.pipeline-card {
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-}
-.pipeline-card-top {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.pipeline-card-info {
-  flex: 1;
-  min-width: 0;
-}
-.pipeline-card-info strong {
-  font: var(--font-small);
-  font-weight: 600;
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pipeline-card-info span {
-  font: var(--font-caption);
-  color: var(--color-text-secondary);
-}
-.pipeline-card-owner {
-  font: var(--font-caption);
-  color: var(--color-text-tertiary);
-  margin-top: var(--space-1);
-  padding-left: 36px;
-}
-.ai-score-sm {
-  width: 32px;
-  height: 32px;
-  font-size: 11px;
-}
-
-/* --- Responsive --- */
-@media (max-width: 1024px) {
-  .pipeline-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 768px) {
-  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-  .pipeline-grid { grid-template-columns: 1fr; }
-  .request-top { flex-direction: column; gap: var(--space-2); }
-  .request-actions { flex-wrap: wrap; }
-}
+.ad{padding-top:var(--space-5);padding-bottom:var(--space-8)}
+.ad-hdr{display:flex;align-items:center;margin-bottom:var(--space-4)}.ad-hdr-l{display:flex;align-items:center;gap:var(--space-3)}.ad-hdr h1{font:var(--font-h1)}.ad-sub{font:var(--font-small);color:var(--color-text-secondary)}
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-bottom:var(--space-4)}.kc{background:var(--color-white);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)}.kl{font:var(--font-small);color:var(--color-text-secondary);margin-bottom:6px}.kv{font-size:26px;font-weight:600}.kt{font:var(--font-caption);color:var(--color-text-tertiary);margin-top:4px}.ku{color:var(--color-success)}
+.dtabs{display:flex;border-bottom:2px solid var(--color-border);margin-bottom:var(--space-4)}.dtab{padding:var(--space-3) var(--space-4);background:none;border:none;font:var(--font-small);font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}.dtab:hover{color:#1D9E75}.dtab.active{color:#1D9E75;border-bottom-color:#1D9E75}
+.sec{padding:var(--space-4);margin-bottom:var(--space-3);box-shadow:0 2px 8px rgba(0,0,0,.06)}.sec h2{font:var(--font-h2);margin-bottom:var(--space-2)}.sec h3{font:var(--font-h3);margin-bottom:var(--space-3)}.sec-sub{font:var(--font-small);color:var(--color-text-secondary);margin-bottom:var(--space-3)}
+.tcol{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+.btn-sm{font-size:12px;padding:6px 14px}
+.rd{font:var(--font-caption);font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap}.rg{background:var(--color-success-bg);color:var(--color-success)}.ry{background:var(--color-warning-bg);color:var(--color-warning)}.rr{background:var(--color-danger-bg);color:var(--color-danger)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}.dg{background:var(--color-success)}.dy{background:var(--color-warning)}.dr{background:var(--color-danger)}
+.sl-card{margin-bottom:var(--space-3)}.sl-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-2)}.sl-ow{display:flex;align-items:center;gap:var(--space-2)}.sl-av{width:36px;height:36px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500}.sl-ow strong{font:var(--font-body);font-weight:500;display:block}.sl-tm{font:var(--font-caption);color:var(--color-text-tertiary)}.sl-pos{font:var(--font-small);color:var(--color-text-secondary);margin-bottom:var(--space-2)}.sl-bar{height:6px;background:var(--color-border);border-radius:3px;overflow:hidden;margin-bottom:var(--space-3)}.sl-fill{height:100%;border-radius:3px}.sl-cands{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-3)}.sl-c{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--color-surface);border-radius:var(--radius-md);font:var(--font-caption)}.sl-ca{width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:500}.sl-acts{display:flex;gap:var(--space-2)}
+.dr-leg{display:flex;gap:var(--space-4);margin-bottom:var(--space-3);font:var(--font-caption);color:var(--color-text-secondary);align-items:center}.dr-leg span{display:flex;align-items:center;gap:4px}.dr-r{margin-left:auto;font-size:10px}.dr-cand{padding:var(--space-3) 0;border-bottom:1px solid var(--color-border);cursor:pointer}.dr-cand:last-child{border-bottom:none}.dr-cand:hover{background:rgba(0,0,0,.01)}.dr-row{display:flex;align-items:center;gap:var(--space-2)}.dr-av{width:36px;height:36px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}.dr-inf{flex:1}.dr-inf strong{font:var(--font-body);font-weight:500;display:block}.dr-inf span{font:var(--font-caption);color:var(--color-text-tertiary)}.dr-scs{display:flex;gap:4px}.dsc{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}.sai{border:1.5px solid var(--color-primary);color:var(--color-primary)}.scr{border:1.5px solid var(--color-success);color:var(--color-success)}.sdr{border:1.5px solid var(--color-accent);color:var(--color-accent)}.dr-cks{margin-top:var(--space-2);padding-left:44px}.dr-ck{display:flex;align-items:center;gap:6px;font:var(--font-caption);padding:3px 0}.ck-g{color:var(--color-success)}.ck-y{color:var(--color-warning)}.ck-r{color:var(--color-danger)}
+.pm-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:1px solid var(--color-border)}.pm-row:last-child{border-bottom:none}.pm-pct{font-size:20px;font-weight:600;color:var(--color-primary);min-width:48px}.pm-inf{flex:1}.pm-inf strong{font:var(--font-body);font-weight:500;display:block}.pm-inf span{font:var(--font-caption);color:var(--color-text-tertiary)}
+.cc-hd,.cc-rw{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.6fr 1.5fr 0.8fr 0.8fr;gap:var(--space-2);align-items:center;padding:var(--space-2) 0}.cc-hd{font:var(--font-caption);font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--color-border)}.cc-rw{border-bottom:1px solid var(--color-border);font:var(--font-small)}.cc-rw:last-child{border-bottom:none}.cc1 strong{display:block;font-weight:500}.cc1 span{font:var(--font-caption);color:var(--color-text-tertiary)}.cctbd{color:var(--color-danger);font-weight:500}.days-u{color:var(--color-danger);font-weight:600}.days-w{color:var(--color-warning);font-weight:500}.days-ok{color:var(--color-success)}
+.cr{display:flex;justify-content:space-between;padding:var(--space-2) 0;border-bottom:1px solid var(--color-border);font:var(--font-small)}.cr:last-child{border-bottom:none}.cr span{color:var(--color-text-secondary)}.crt{border-top:2px solid var(--color-border);margin-top:var(--space-2);padding-top:var(--space-2)}
+.al-item{padding:var(--space-2) 0;border-bottom:1px solid var(--color-border)}.al-item:last-child{border-bottom:none}.al-badge{font:var(--font-caption);font-weight:500;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:2px}.al-urgent{background:var(--color-danger-bg);color:var(--color-danger)}.al-warn{background:var(--color-warning-bg);color:var(--color-warning)}.al-info{background:var(--color-primary-light);color:var(--color-primary)}.al-item p{font:var(--font-caption);color:var(--color-text-secondary)}
+@media(max-width:1024px){.tcol{grid-template-columns:1fr}}@media(max-width:768px){.kg{grid-template-columns:repeat(2,1fr)}.cc-hd,.cc-rw{grid-template-columns:1fr 1fr}}
 </style>
