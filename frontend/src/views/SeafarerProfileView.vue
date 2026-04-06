@@ -110,7 +110,7 @@ function submitForm() {
 }
 
 function shareDocs() {
-  alert('Sharing ' + selectedDocs.value.size + ' documents with principal...\n\nDocuments:\n' + [...selectedDocs.value].join('\n'))
+  const docList = [...selectedDocs.value].join('%0D%0A- '); const subject = encodeURIComponent('HireHub - Shared Documents: ' + profile.value.fullName); const body = encodeURIComponent('Dear Principal,\n\n' + profile.value.fullName + ' is sharing the following documents with you via HireHub:\n\n- ') + docList + encodeURIComponent('\n\nPlease log in to HireHub to review and download.\n\nBest regards,\n' + profile.value.fullName); window.location.href = 'mailto:?subject=' + subject + '&body=' + body; //\n\nDocuments:\n' + [...selectedDocs.value].join('\n'))
   shareMode.value = false
   selectedDocs.value.clear()
 }
@@ -545,3 +545,4 @@ const profile = ref({
 .doc-table-head{display:grid;gap:8px;padding:8px 0;border-bottom:2px solid var(--color-border);font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
 .doc-row{display:grid;gap:8px;padding:10px 0;border-bottom:1px solid var(--color-border);align-items:center;font-size:12px;transition:background 0.15s}
 </style>
+
