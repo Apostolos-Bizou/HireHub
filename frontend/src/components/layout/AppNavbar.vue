@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -47,9 +47,7 @@ const navItems = computed(() => {
     )
   } else if (auth.isAgent) {
     items.push(
-      { icon: icons.search, label: 'Talent Search', to: '/search', active: route.path === '/search' },
-      { icon: icons.aiRec, label: 'AI Recruit', to: '/ai-recommender', active: route.path === '/ai-recommender' },
-      { icon: icons.dashboard, label: 'Dashboard', to: '/agent', active: route.path === '/agent' }
+      { icon: icons.dashboard, label: 'Dashboard', title: 'Πίνακας ελέγχου — KPIs, αιτήματα, AI εργαλεία', to: '/agent', active: route.path === '/agent' }
     )
   }
   if (auth.user?.role === 'ADMIN') {
@@ -60,7 +58,6 @@ const navItems = computed(() => {
   items.push(
     { icon: icons.messages, label: 'Messages', title: 'Μηνύματα — επικοινωνία με ναυτικούς, agents, πλοιοκτήτες', to: '/messages', active: route.path === '/messages' },
     { icon: icons.alerts, label: 'Alerts', title: 'Ειδοποιήσεις — νέα profiles, shortlists, λήξεις', to: '/notifications', active: route.path === '/notifications', badge: notif.unreadCount },
-    { icon: icons.settings, label: 'Guide', title: '������ ���������� � ���� ��� ���������� �� HireHub', to: '/guide', active: route.path === '/guide' },
     { icon: icons.settings, label: 'Settings', title: 'Ρυθμίσεις — λογαριασμός, ιδιωτικότητα, προτιμήσεις', to: '/settings', active: route.path === '/settings' }
   )
   return items
@@ -226,6 +223,3 @@ function handleLogout() {
   .user-info { display: none; }
 }
 </style>
-
-
-
