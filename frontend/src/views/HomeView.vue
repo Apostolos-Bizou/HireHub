@@ -146,12 +146,12 @@ const openings = [
 </template>
 
 <style scoped>
-.feed-layout { display: grid; grid-template-columns: 220px 1fr 280px; gap: var(--space-5); padding-top: var(--space-5); padding-bottom: var(--space-8); }
+.feed-layout { display: grid; grid-template-columns: 200px 1fr 280px; gap: var(--space-5); padding-top: var(--space-5); padding-bottom: var(--space-8); }
 .profile-banner { height: 56px; background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 .profile-mini { text-align: center; padding-bottom: var(--space-4); }
 .profile-mini h3 { font: var(--font-h3); margin-top: var(--space-2); }
 .role-label { font: var(--font-caption); color: var(--color-text-secondary); text-transform: capitalize; }
-.mini-stats { display: flex; justify-content: center; gap: var(--space-5); margin-top: var(--space-3); }
+.mini-stats { display: flex; justify-content: center; gap: var(--space-3); margin-top: var(--space-2); }
 .mini-stats div { text-align: center; }
 .mini-stats strong { display: block; font: var(--font-h3); color: var(--color-primary); }
 .mini-stats span { font: var(--font-caption); color: var(--color-text-secondary); }
@@ -185,6 +185,7 @@ const openings = [
 
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
+
 
 
 
