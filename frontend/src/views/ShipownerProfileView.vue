@@ -5,12 +5,12 @@ import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 
 const company = ref({
-  name: "Tsakos Energy Navigation",
+  name: "Varship Shipping Co.",
   type: "Shipowner / Fleet Manager",
   location: "Piraeus, Greece",
-  founded: "1993",
-  website: "www.tenn.gr",
-  about: "Tsakos Energy Navigation is a leading international tanker company, providing seaborne transportation of crude oil, petroleum products, and LNG. With a modern fleet of 65+ vessels, we are committed to operational excellence, safety, and environmental responsibility.",
+  founded: "2005",
+  website: "www.varship.gr",
+  about: "Varship Shipping Co. is a leading international tanker company, providing seaborne transportation of crude oil, petroleum products, and LNG. With a modern fleet of 65+ vessels, we are committed to operational excellence, safety, and environmental responsibility.",
   stats: { vessels: 65, crew: 1560, nationalities: 12, deploymentsYTD: 487 },
   fleet: [
     { name: "MT Athens Glory", type: "Aframax Tanker", dwt: "115,000", flag: "Greece", built: 2019, crew: 24 },
@@ -348,3 +348,4 @@ const tabs = ['Overview', 'Fleet', 'Crew Needs', 'Manning Agents']
   .about-details { grid-template-columns: 1fr; }
 }
 </style>
+
