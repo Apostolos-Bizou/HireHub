@@ -36,9 +36,8 @@ const navItems = computed(() => {
   if (auth.isShipowner) {
     items.push(
       { icon: icons.search, label: 'Talent Search', to: '/search', active: route.path === '/search' },
-      { icon: icons.profile, label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') },
-      { icon: icons.shortlist, label: 'Shortlist', to: '/shortlists', active: route.path.startsWith('/shortlist') },
-      { icon: icons.agent, label: 'Agent', to: '/agent', active: route.path === '/agent' }
+      { icon: icons.profile, label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') || route.path.startsWith('/my-profile') },
+      { icon: icons.shortlist, label: 'Shortlist', to: '/shortlists', active: route.path.startsWith('/shortlist') }
     )
   } else if (auth.isSeafarer) {
     items.push(
