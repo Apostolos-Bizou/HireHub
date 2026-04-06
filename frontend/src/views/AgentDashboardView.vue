@@ -143,19 +143,38 @@ const aiSubTabs = [
 ]
 const selectedRequest = ref(0)
 const selectedDeployCandidate = ref(0)
-const deployCandidates = [
-  { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
-    costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
-    notes:'All documents valid. No renewals needed. Direct deployment.' },
-  { name:'Ruslan Goncharov', i:'RG', color:'#E7A33E', nat:'Ukrainian', origin:'Odessa, Ukraine', dest:'Piraeus, Greece', rank:'2nd Officer',
-    costs:{medical:280,travel:420,flag:160,visa:150,dmw:0,insurance:250,agency:400,renewals:190},
-    notes:'Greece flag endorsement missing — est. $160 + 5 days processing. Higher total due to renewals.' },
-  { name:'Lazar Stoyanov', i:'LS', color:'#B71C1C', nat:'Bulgarian', origin:'Varna, Bulgaria', dest:'Piraeus, Greece', rank:'AB',
-    costs:{medical:400,travel:280,flag:160,visa:0,insurance:250,agency:400,dmw:0,renewals:710},
-    notes:'STCW renewal $350 + Medical PEME $400 (expired). Panama flag $160. High risk — 21 day timeline.' }
+const requestCandidates = [
+  // Request 0: Varship - 3rd Officer
+  [
+    { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
+      costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
+      notes:'All documents valid. No renewals needed. Direct deployment.' },
+    { name:'Ruslan Goncharov', i:'RG', color:'#E7A33E', nat:'Ukrainian', origin:'Odessa, Ukraine', dest:'Piraeus, Greece', rank:'2nd Officer',
+      costs:{medical:280,travel:420,flag:160,visa:150,dmw:0,insurance:250,agency:400,renewals:190},
+      notes:'Greece flag endorsement missing. Higher total due to renewals.' },
+    { name:'Lazar Stoyanov', i:'LS', color:'#B71C1C', nat:'Bulgarian', origin:'Varna, Bulgaria', dest:'Piraeus, Greece', rank:'AB',
+      costs:{medical:400,travel:280,flag:160,visa:0,insurance:250,agency:400,dmw:0,renewals:710},
+      notes:'STCW renewal + Medical PEME expired. Panama flag. High risk — 21 day timeline.' }
+  ],
+  // Request 1: Diana - Chief Engineer
+  [
+    { name:'Dmitry Petrov', i:'DP', color:'#1D9E75', nat:'Russian', origin:'St Petersburg, Russia', dest:'Piraeus, Greece', rank:'Chief Engineer',
+      costs:{medical:300,travel:520,flag:0,visa:180,dmw:0,insurance:280,agency:400,renewals:0},
+      notes:'All documents valid. Experienced Chief Engineer. Ready for deployment.' },
+    { name:'Raj Patel', i:'RP', color:'#1D9E75', nat:'Indian', origin:'Mumbai, India', dest:'Piraeus, Greece', rank:'Chief Engineer',
+      costs:{medical:280,travel:680,flag:140,visa:200,dmw:0,insurance:280,agency:400,renewals:0},
+      notes:'Needs Liberia flag endorsement. Travel cost higher from Mumbai.' },
+    { name:'Miguel Santos', i:'MS', color:'#1D9E75', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'2nd Engineer',
+      costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
+      notes:'All documents valid. Filipino crew preferred by Diana for engine room.' },
+    { name:'Chen Wei', i:'CW', color:'#E7A33E', nat:'Chinese', origin:'Shanghai, China', dest:'Piraeus, Greece', rank:'3rd Engineer',
+      costs:{medical:320,travel:750,flag:160,visa:220,dmw:0,insurance:250,agency:400,renewals:350},
+      notes:'Medical due for renewal in 45 days. Flag endorsement needed.' }
+  ]
 ]
-const selectedCand = computed(() => deployCandidates[selectedDeployCandidate.value])
-const candTotal = computed(() => Object.values(selectedCand.value.costs).reduce((s,v) => s + v, 0))
+const deployCandidates = computed(() => requestCandidates[selectedRequest.value] || requestCandidates[0])
+const selectedCand = computed(() => deployCandidates.value[selectedDeployCandidate.value])
+const candTotal = computed(() => selectedCand.value ? Object.values(selectedCand.value.costs).reduce((s,v) => s + v, 0) : 0)
 const compareData = [
   {label:'AI score',v:['92','87','68'],best:0},
   {label:'CrewScore',v:['87','82','64'],best:0},
@@ -512,5 +531,6 @@ const checklist = [
 [title]{cursor:help}
 @media(max-width:1024px){.tcol{grid-template-columns:1fr}}@media(max-width:768px){.kg{grid-template-columns:repeat(2,1fr)}.g-hdr,.g-row{grid-template-columns:80px 1fr}.gantt-controls{flex-direction:column}.gc-select{min-width:100%}}
 </style>
+
 
 
