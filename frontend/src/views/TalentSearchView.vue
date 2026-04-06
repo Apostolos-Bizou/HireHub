@@ -28,9 +28,43 @@ const candidates = computed(() => search.results?.candidates || demoCandidates)
 const totalResults = computed(() => search.results?.totalResults || demoCandidates.length)
 const shortlisted = ref(new Set())
 
+// Shortlist picker
+const showShortlistPicker = ref(false)
+const addingToShortlist = ref(false)
+const addSuccess = ref(false)
+const myShortlists = ref([
+  { id: "1", title: "3rd Officer — Oil/Chemical Tanker", candidateCount: 5 },
+  { id: "2", title: "Chief Engineer — Bulk Carrier", candidateCount: 3 },
+  { id: "3", title: "2nd Officer — LPG Carrier", candidateCount: 8 }
+])
+const selectedShortlistId = ref('')
+
 function toggleShortlist(id) {
   if (shortlisted.value.has(id)) shortlisted.value.delete(id)
   else shortlisted.value.add(id)
+}
+
+function openShortlistPicker() {
+  if (shortlisted.value.size === 0) return
+  selectedShortlistId.value = myShortlists.value[0]?.id || ''
+  addSuccess.value = false
+  showShortlistPicker.value = true
+}
+
+function addToShortlist() {
+  if (!selectedShortlistId.value) return
+  addingToShortlist.value = true
+  const sl = myShortlists.value.find(s => s.id === selectedShortlistId.value)
+  if (sl) sl.candidateCount += shortlisted.value.size
+  setTimeout(() => {
+    addingToShortlist.value = false
+    addSuccess.value = true
+    setTimeout(() => {
+      showShortlistPicker.value = false
+      addSuccess.value = false
+      shortlisted.value.clear()
+    }, 1200)
+  }, 600)
 }
 
 function viewProfile(id) {
@@ -215,15 +249,57 @@ function viewProfile(id) {
             <span class="shortlist-bar-count">{{ shortlisted.size }} candidate{{ shortlisted.size > 1 ? 's' : '' }} selected</span>
             <div class="shortlist-bar-actions">
               <button class="btn btn-tertiary btn-sm" @click="shortlisted.clear()">Clear</button>
-              <button class="btn btn-primary btn-sm" @click="router.push('/shortlists')">
+              <button class="btn btn-primary btn-sm" @click="openShortlistPicker">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-                View Shortlist
+                Add to Shortlist
               </button>
             </div>
           </div>
         </div>
       </Transition>
     </main>
+
+    <!-- Shortlist Picker Modal -->
+    <div v-if="showShortlistPicker" class="modal-overlay" @click.self="showShortlistPicker = false">
+      <div class="modal-card">
+        <div v-if="addSuccess" class="modal-success">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1B5E20" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <p class="modal-success-text">Added to shortlist!</p>
+        </div>
+        <template v-else>
+          <div class="modal-header">
+            <h2>Add to shortlist</h2>
+            <button class="modal-close" @click="showShortlistPicker = false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-desc">Select which shortlist to add {{ shortlisted.size }} candidate{{ shortlisted.size > 1 ? 's' : '' }} to:</p>
+            <div class="sl-picker-options">
+              <label v-for="sl in myShortlists" :key="sl.id" class="sl-picker-option" :class="{ 'sl-picker-selected': selectedShortlistId === sl.id }">
+                <input type="radio" :value="sl.id" v-model="selectedShortlistId" />
+                <div class="sl-picker-info">
+                  <strong>{{ sl.title }}</strong>
+                  <span>{{ sl.candidateCount }} candidates</span>
+                </div>
+              </label>
+            </div>
+            <div class="sl-picker-or">
+              <span>or</span>
+            </div>
+            <button class="btn btn-secondary" style="width:100%;text-align:center;" @click="showShortlistPicker = false; router.push('/shortlists')">
+              + Create new shortlist first
+            </button>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" @click="showShortlistPicker = false">Cancel</button>
+              <button class="btn btn-primary" @click="addToShortlist" :disabled="addingToShortlist || !selectedShortlistId">
+                {{ addingToShortlist ? 'Adding...' : 'Add candidates' }}
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -545,5 +621,67 @@ function viewProfile(id) {
   .candidate-main { flex-direction: column; }
   .candidate-actions { flex-direction: row; justify-content: space-between; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
   .ai-score-wrapper { flex-direction: row; gap: var(--space-2); }
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: var(--space-4);
+}
+.modal-card {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-5) var(--space-5) 0;
+}
+.modal-header h2 { font: var(--font-h2); }
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--color-text-tertiary);
+  padding: var(--space-1); border-radius: var(--radius-sm);
+}
+.modal-close:hover { background: var(--color-surface); }
+.modal-body { padding: var(--space-5); }
+.modal-desc { font: var(--font-small); color: var(--color-text-secondary); margin-bottom: var(--space-4); }
+.modal-actions {
+  display: flex; justify-content: flex-end; gap: var(--space-2);
+  padding-top: var(--space-4); margin-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.modal-success {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
+  padding: var(--space-8) var(--space-5);
+}
+.modal-success-text { font: var(--font-h3); color: var(--color-success); }
+
+.sl-picker-options { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); }
+.sl-picker-option {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+  cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.sl-picker-option:hover { border-color: var(--color-primary); background: var(--color-primary-light); }
+.sl-picker-selected { border-color: var(--color-primary); background: var(--color-primary-light); }
+.sl-picker-option input[type="radio"] { display: none; }
+.sl-picker-info strong { display: block; font: var(--font-body); font-weight: 500; }
+.sl-picker-info span { font: var(--font-caption); color: var(--color-text-secondary); }
+.sl-picker-or {
+  text-align: center; margin: var(--space-3) 0;
+  font: var(--font-caption); color: var(--color-text-tertiary);
 }
 </style>
