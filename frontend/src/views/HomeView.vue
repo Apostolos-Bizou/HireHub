@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, computed, onMounted } from "vue"
 import { useAuthStore } from "@/stores/auth"
 import api from "@/services/api"
 
 const auth = useAuthStore()
+const photoMap = { 'simos.varias@email.com': '/profiles/simos-varias.jpg' }
+const userPhoto = computed(() => photoMap[auth.user?.email] || null)
 const posts = ref([])
 const newPost = ref("")
 
@@ -182,5 +184,6 @@ const openings = [
 
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
+
 
 
