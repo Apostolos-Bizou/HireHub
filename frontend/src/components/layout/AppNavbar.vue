@@ -73,7 +73,7 @@ function handleLogout() {
   <nav class="navbar">
     <div class="navbar-inner container">
       <div class="navbar-logo" @click="router.push('/')">
-        <img src="/logo.svg" alt="HireHub" class="logo-mark" style="width:34px;height:34px;border-radius:8px;" />
+        <img src="/logo.svg" alt="HireHub" class="logo-mark" style="width:34px;height:34px;border-radius:8px;" /><span class="logo-text">HireHub</span>
         <input class="search-input" type="text" placeholder="Search" />
       </div>
 
@@ -139,6 +139,7 @@ function handleLogout() {
   font-weight: 700;
   font-size: 18px;
 }
+.logo-text { font-size: 18px; font-weight: 700; color: var(--color-primary-dark); letter-spacing: -0.5px; }
 .search-input {
   width: 200px;
   padding: 6px 12px 6px 32px;
@@ -217,9 +218,12 @@ function handleLogout() {
 .user-role { font: var(--font-caption); color: var(--color-text-tertiary); text-transform: capitalize; }
 
 @media (max-width: 768px) {
-  .search-input { display: none; }
+  .logo-text { font-size: 18px; font-weight: 700; color: var(--color-primary-dark); letter-spacing: -0.5px; }
+.search-input { display: none; }
   .nav-label { display: none; }
   .nav-item { padding: 4px 8px; min-width: 40px; }
   .user-info { display: none; }
 }
 </style>
+
+
