@@ -94,6 +94,14 @@ const modalFields = {
   ]
 }
 
+function skillColor(endorsements) {
+  const pct = Math.min(endorsements * 7.14, 100) / 100
+  const r = Math.round(220 * (1 - pct) + 30)
+  const g = Math.round(180 * pct + 40)
+  const b = Math.round(30)
+  return `rgb(${r},${g},${b})`
+}
+
 function handleUpload(section) {
   modalType.value = section
   modalForm.value = {}
@@ -332,8 +340,8 @@ const profile = ref({
         <div class="card section"><div class="section-header"><h2>Skills &amp; Endorsements</h2><button class="btn-upload" @click="handleUpload('Skill')">+ Add</button></div>
           <div class="skills-list">
             <div v-for="s in profile.skills" :key="s.name" class="skill-item">
-              <div class="skill-info"><strong>{{ s.name }}</strong><span>{{ s.endorsements }}</span></div>
-              <div class="skill-bar"><div class="skill-fill" :style="{width: Math.min(s.endorsements*7,100)+'%'}"></div></div>
+              <div class="skill-info"><strong>{{ s.name }}</strong><span class="skill-pct">{{ Math.min(Math.round(s.endorsements * 7.14), 100) }}%</span></div>
+              <div class="skill-bar"><div class="skill-fill" :style="{width: Math.min(s.endorsements*7.14,100)+'%', background: skillColor(s.endorsements)}"></div></div>
             </div>
           </div>
         </div>
@@ -508,6 +516,7 @@ const profile = ref({
 .skills-list{display:flex;flex-direction:column;gap:12px}
 .skill-item{display:flex;align-items:center;gap:12px}
 .skill-info{min-width:160px;display:flex;justify-content:space-between}.skill-info strong{font-size:13px}.skill-info span{font-size:11px;color:var(--color-text-tertiary)}
+.skill-pct{font-weight:600;min-width:36px;text-align:right}
 .skill-bar{flex:1;height:6px;background:var(--color-surface);border-radius:3px;overflow:hidden}
 .skill-fill{height:100%;background:var(--color-primary);border-radius:3px}
 .award-item{display:flex;gap:12px;margin-bottom:16px}.award-icon{font-size:24px;flex-shrink:0}
