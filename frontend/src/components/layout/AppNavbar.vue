@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -18,18 +18,18 @@ const initials = computed(() => {
 
 const navItems = computed(() => {
   const items = [
-    { icon: '🏠', label: 'Home', to: '/', active: route.path === '/' }
+    { icon: '🚢', label: 'Home', to: '/', active: route.path === '/' }
   ]
   if (auth.isShipowner) {
     items.push(
       { icon: '🔍', label: 'Talent Search', to: '/search', active: route.path === '/search' },
-      { icon: '👤', label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') },
+      { icon: '👮🏼‍♂️', label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') },
       { icon: '📋', label: 'Shortlist', to: '/shortlists', active: route.path.startsWith('/shortlist') },
       { icon: '🏢', label: 'Agent', to: '/agent', active: route.path === '/agent' }
     )
   } else if (auth.isSeafarer) {
     items.push(
-      { icon: '👤', label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') }
+      { icon: '👮🏼‍♂️', label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') }
     )
   } else if (auth.isAgent) {
     items.push(
@@ -203,6 +203,7 @@ function handleLogout() {
   .user-info { display: none; }
 }
 </style>
+
 
 
 
