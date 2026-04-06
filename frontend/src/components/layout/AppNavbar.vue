@@ -47,9 +47,10 @@ const navItems = computed(() => {
     )
   } else if (auth.isAgent) {
     items.push(
+      { icon: icons.search, label: 'Talent Search', to: '/search', active: route.path === '/search' },
       { icon: icons.aiRec, label: 'AI Recruit', to: '/ai-recommender', active: route.path === '/ai-recommender' },
       { icon: icons.dashboard, label: 'Dashboard', to: '/agent', active: route.path === '/agent' }
-  }
+    )
   if (auth.user?.role === 'ADMIN') {
     items.push(
       { icon: icons.admin, label: 'Admin', to: '/admin', active: route.path === '/admin' }
