@@ -7,6 +7,8 @@ import { useNotificationStore } from '@/stores/notifications'
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const photoMap = { 'simos.varias@email.com': '/profiles/simos-varias.jpg' }
+const userPhoto = computed(() => photoMap[auth.user?.email] || null)
 const notif = useNotificationStore()
 
 const initials = computed(() => {
@@ -79,9 +81,8 @@ function handleLogout() {
 
       <!-- User Menu -->
       <div class="navbar-user" @click="handleLogout">
-        <div class="avatar avatar-sm" :class="'avatar-' + (auth.isSeafarer ? 'seafarer' : auth.isAgent ? 'agent' : 'owner')">
-          {{ initials }}
-        </div>
+        <img v-if="userPhoto" :src="userPhoto" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />
+        <div v-else class="avatar avatar-sm" :class="'avatar-' + (auth.isSeafarer ? 'seafarer' : auth.isAgent ? 'agent' : 'owner')">{{ initials }}</div>
         <div class="user-info">
           <span class="user-name">{{ auth.user?.fullName }}</span>
           <span class="user-role">{{ auth.user?.role?.replace('_', ' ') }}</span>
@@ -202,4 +203,6 @@ function handleLogout() {
   .user-info { display: none; }
 }
 </style>
+
+
 
