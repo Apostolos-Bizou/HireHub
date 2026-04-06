@@ -21,7 +21,6 @@ const routes = [
     beforeEnter: (to, from, next) => {
       const auth = useAuthStore()
       if (auth.user?.role === 'SHIPOWNER') next({ name: 'ShipownerHome' })
-      else if (auth.user?.role === 'MANNING_AGENT') next({ name: 'AgentDashboard' })
       else next()
     },
     component: () => import('@/views/HomeView.vue')
@@ -57,6 +56,12 @@ const routes = [
     path: '/company/:id',
     name: 'CompanyPublic',
     component: () => import('@/views/CompanyPublicView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/guide',
+    name: 'Guide',
+    component: () => import('@/views/GuideView.vue'),
     meta: { requiresAuth: true }
   },
   // Own profile — redirects based on role
@@ -174,4 +179,3 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
-
