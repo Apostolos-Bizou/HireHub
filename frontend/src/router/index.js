@@ -21,9 +21,16 @@ const routes = [
     beforeEnter: (to, from, next) => {
       const auth = useAuthStore()
       if (auth.user?.role === 'SHIPOWNER') next({ name: 'ShipownerHome' })
+      else if (auth.user?.role === 'SEAFARER') next({ name: 'SeafarerHome' })
       else next()
     },
     component: () => import('@/views/HomeView.vue')
+  },
+  {
+    path: '/seafarer-dashboard',
+    name: 'SeafarerHome',
+    component: () => import('@/views/SeafarerHomeView.vue'),
+    meta: { requiresAuth: true, roles: ['SEAFARER', 'ADMIN'] }
   },
   {
     path: '/dashboard',
