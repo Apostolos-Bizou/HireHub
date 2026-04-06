@@ -1,8 +1,8 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter
-from datetime import datetime
 
 router = APIRouter()
 
 @router.get("/health")
 def health_check():
-    return {"status": "UP", "service": "HireHub AI Service", "version": "1.0.0", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "UP", "service": "HireHub AI Service", "version": "1.0.0", "timestamp": datetime.now(timezone.utc).isoformat()}

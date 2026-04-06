@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Generate a test JWT
 def make_token(role="SHIPOWNER", user_id="test-user-123"):
@@ -10,7 +10,7 @@ def make_token(role="SHIPOWNER", user_id="test-user-123"):
         "email": "test@test.com",
         "role": role,
         "type": "access",
-        "exp": datetime.utcnow() + timedelta(hours=1)
+        "exp": datetime.now(timezone.utc) + timedelta(hours=1)
     }
     return jwt.encode(payload, "CHANGE_ME", algorithm="HS256")
 
