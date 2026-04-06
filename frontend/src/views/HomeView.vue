@@ -183,3 +183,4 @@ const openings = [
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
 
+
