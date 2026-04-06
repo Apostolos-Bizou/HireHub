@@ -9,24 +9,26 @@ const photoMap = { 'simos.varias@email.com': '/profiles/simos-varias.jpg' }
 const userPhoto = computed(() => photoMap[auth.user?.email] || null)
 const activeTab = ref('overview')
 const shareMode = ref(false)
-const selectedDocs = ref(new Set())
-const selectedCount = computed(() => selectedDocs.value.size)
+const selectedDocs = ref([])
 
 function toggleShareMode() {
   shareMode.value = !shareMode.value
-  if (!shareMode.value) selectedDocs.value.clear()
+  if (!shareMode.value) selectedDocs.value = []
 }
 
 function toggleDoc(docName) {
-  if (selectedDocs.value.has(docName)) selectedDocs.value.delete(docName)
-  else selectedDocs.value.add(docName)
+  const idx = selectedDocs.value.indexOf(docName)
+  if (idx >= 0) selectedDocs.value.splice(idx, 1)
+  else selectedDocs.value.push(docName)
 }
 
 function selectAll() {
-  profile.value.documents.forEach(cat => cat.items.forEach(doc => selectedDocs.value.add(doc.name)))
+  const all = []
+  profile.value.documents.forEach(cat => cat.items.forEach(doc => all.push(doc.name)))
+  selectedDocs.value = all
 }
 
-function selectNone() { selectedDocs.value.clear() }
+function selectNone() { selectedDocs.value = [] }
 
 function shareDocs() {
   const docs = [...selectedDocs.value]
@@ -34,7 +36,7 @@ function shareDocs() {
   const body = 'Dear Principal,\n\n' + profile.value.fullName + ' (' + profile.value.currentRank + ') is sharing the following ' + docs.length + ' documents with you via HireHub:\n\n- ' + docs.join('\n- ') + '\n\nPlease log in to HireHub to review and download.\n\nBest regards,\n' + profile.value.fullName
   window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body)
   shareMode.value = false
-  selectedDocs.value.clear()
+  selectedDocs.value = []
 }
 
 const showModal = ref(false)
@@ -355,10 +357,10 @@ const profile = ref({
             </div>
             <div class="docs-actions">
               <template v-if="shareMode">
-                <span class="share-count">{{ selectedCount }} selected</span>
+                <span class="share-count">{{ selectedDocs.length }} selected</span>
                 <button class="btn-link" @click="selectAll">Select All</button>
                 <button class="btn-link" @click="selectNone">Clear</button>
-                <button class="btn btn-primary btn-sm" @click="shareDocs" :disabled="selectedDocs.size < 1">Share Selected</button>
+                <button class="btn btn-primary btn-sm" @click="shareDocs" :disabled="selectedDocs.length < 1">Share Selected</button>
                 <button class="btn btn-tertiary btn-sm" @click="toggleShareMode">Cancel</button>
               </template>
 <button class="btn-upload" @click="handleUpload('Document')">+ Upload</button>
@@ -382,8 +384,8 @@ const profile = ref({
               <span class="doc-col-status">Status</span>
               <span v-if="!shareMode" class="doc-col-share">Shared</span>
             </div>
-            <div v-for="doc in cat.items" :key="doc.name" class="doc-row" :class="{'doc-expiring': doc.status === 'EXPIRING', 'doc-selected': selectedDocs.has(doc.name)}" @click="shareMode ? toggleDoc(doc.name) : null" :style="shareMode ? 'cursor:pointer' : ''">
-              <span v-if="shareMode" class="doc-col-check"><input type="checkbox" :checked="selectedDocs.has(doc.name)" @click.stop="toggleDoc(doc.name)" class="doc-checkbox" /></span>
+            <div v-for="doc in cat.items" :key="doc.name" class="doc-row" :class="{'doc-expiring': doc.status === 'EXPIRING', 'doc-selected': selectedDocs.includes(doc.name)}" @click="shareMode ? toggleDoc(doc.name) : null" :style="shareMode ? 'cursor:pointer' : ''">
+              <span v-if="shareMode" class="doc-col-check"><input type="checkbox" :checked="selectedDocs.includes(doc.name)" @click.stop="toggleDoc(doc.name)" class="doc-checkbox" /></span>
               <span class="doc-col-name"><strong>{{ doc.name }}</strong></span>
               <span class="doc-col-num doc-mono">{{ doc.number }}</span>
               <span class="doc-col-date">{{ doc.issued }}</span>
