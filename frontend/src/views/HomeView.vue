@@ -4,7 +4,7 @@ import { useAuthStore } from "@/stores/auth"
 import api from "@/services/api"
 
 const auth = useAuthStore()
-const photoMap = { 'simos.varias@email.com': '/profiles/simos-varias.jpg' }
+const photoMap = { 'simos.varias@email.com': '/profiles/simos-varias.jpg', 'info@varship.gr': '/profiles/varship-logo.png' }
 const userPhoto = computed(() => photoMap[auth.user?.email] || null)
 const posts = ref([])
 const newPost = ref("")
@@ -92,8 +92,8 @@ const openings = [
           <div><strong>12</strong><span>Shortlists</span></div>
         </div>
         <div v-if="isShipowner" class="mini-stats">
-          <div><strong>65</strong><span>Vessels</span></div>
-          <div><strong>1,560</strong><span>Active Crew</span></div>
+          <div><strong>18</strong><span>Vessels</span></div>
+          <div><strong>430</strong><span>Active Crew</span></div>
           <div><strong>3</strong><span>Open Needs</span></div>
         </div>
         <div v-if="isAgent" class="mini-stats">
@@ -289,3 +289,4 @@ const openings = [
 .btn-sm { font-size: 12px; padding: 6px 14px; }
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
+
