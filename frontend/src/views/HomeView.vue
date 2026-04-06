@@ -153,9 +153,9 @@ const openings = [
 .profile-mini h3 { font: var(--font-h3); margin-top: var(--space-2); }
 .role-label { font: var(--font-caption); color: var(--color-text-secondary); text-transform: capitalize; }
 .mini-stats { display: flex; justify-content: center; gap: var(--space-3); margin-top: var(--space-2); }
-.mini-stats div { text-align: center; }
-.mini-stats strong { display: block; font: var(--font-h3); color: var(--color-primary); }
-.mini-stats span { font: var(--font-caption); color: var(--color-text-secondary); }
+.mini-stats div { text-align: center; line-height: 1.3; }
+.mini-stats strong { display: block; font-size: 18px; font-weight: 600; color: var(--color-primary); }
+.mini-stats span { font-size: 10px; color: var(--color-text-tertiary); line-height: 1.2; }
 .sidebar-nav { padding: var(--space-2) 0; margin-top: var(--space-3); }
 .sidebar-nav a { display: block; padding: var(--space-2) var(--space-4); font: var(--font-body); color: var(--color-text-secondary); text-decoration: none; }
 .sidebar-nav a:hover { background: var(--color-surface); }
@@ -186,6 +186,7 @@ const openings = [
 
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
+
 
 
 
