@@ -47,7 +47,7 @@ const navItems = computed(() => {
     )
   } else if (auth.isAgent) {
     items.push(
-      { icon: icons.dashboard, label: 'Dashboard', to: '/agent', active: route.path === '/agent' }
+      { icon: icons.dashboard, label: 'Home', to: '/agent', active: route.path === '/agent' }
     )
   }
   if (auth.user?.role === 'ADMIN') {
@@ -225,6 +225,7 @@ function handleLogout() {
   .user-info { display: none; }
 }
 </style>
+
 
 
 
