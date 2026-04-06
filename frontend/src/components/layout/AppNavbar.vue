@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -18,33 +18,33 @@ const initials = computed(() => {
 
 const navItems = computed(() => {
   const items = [
-    { icon: '🚢', label: 'Home', to: '/', active: route.path === '/' }
+    { icon: '??', label: 'Home', to: '/', active: route.path === '/' }
   ]
   if (auth.isShipowner) {
     items.push(
-      { icon: '🔍', label: 'Talent Search', to: '/search', active: route.path === '/search' },
-      { icon: '👮🏼‍♂️', label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') },
-      { icon: '📋', label: 'Shortlist', to: '/shortlists', active: route.path.startsWith('/shortlist') },
-      { icon: '🏢', label: 'Agent', to: '/agent', active: route.path === '/agent' }
+      { icon: '??', label: 'Talent Search', to: '/search', active: route.path === '/search' },
+      { icon: '?????>?', label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') },
+      { icon: '??', label: 'Shortlist', to: '/shortlists', active: route.path.startsWith('/shortlist') },
+      { icon: '??', label: 'Agent', to: '/agent', active: route.path === '/agent' }
     )
   } else if (auth.isSeafarer) {
     items.push(
-      { icon: '👮🏼‍♂️', label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') }
+      { icon: '?????>?', label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') }
     )
   } else if (auth.isAgent) {
     items.push(
-      { icon: '📊', label: 'Dashboard', to: '/agent', active: route.path === '/agent' }
+      { icon: '??', label: 'Dashboard', to: '/agent', active: route.path === '/agent' }
     )
   }
   if (auth.user?.role === 'ADMIN') {
     items.push(
-      { icon: '🛡️', label: 'Admin', to: '/admin', active: route.path === '/admin' }
+      { icon: '???', label: 'Admin', to: '/admin', active: route.path === '/admin' }
     )
   }
   items.push(
-    { icon: '💬', label: 'Messages', to: '/messages', active: route.path === '/messages' },
-    { icon: '🔔', label: 'Alerts', to: '/notifications', active: route.path === '/notifications', badge: notif.unreadCount },
-    { icon: '⚙️', label: 'Settings', to: '/settings', active: route.path === '/settings' }
+    { icon: '??', label: 'Messages', to: '/messages', active: route.path === '/messages' },
+    { icon: '??', label: 'Alerts', to: '/notifications', active: route.path === '/notifications', badge: notif.unreadCount },
+    { icon: '??', label: 'Settings', to: '/settings', active: route.path === '/settings' }
   )
   return items
 })
@@ -164,7 +164,7 @@ function handleLogout() {
   color: var(--color-text-primary);
   border-bottom-color: var(--color-text-primary);
 }
-.nav-icon { font-size: 20px; line-height: 1; }
+.nav-icon { font-size: 20px; line-height: 1; filter: grayscale(1) opacity(0.5); }
 .nav-label { font: var(--font-caption); margin-top: 1px; }
 .nav-badge {
   position: absolute;
@@ -203,6 +203,8 @@ function handleLogout() {
   .user-info { display: none; }
 }
 </style>
+
+
 
 
 
