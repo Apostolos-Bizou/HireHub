@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, computed } from 'vue'
 const activeTab = ref(0)
 const tabs = [
@@ -222,7 +222,7 @@ const checklist = [
       <div class="sl-pos">{{sl.position}}</div>
       <div class="sl-bar"><div class="sl-fill" :style="{width:sl.readyPct+'%',background:sl.readyPct>=80?'#1B5E20':'#E7A33E'}"></div></div>
       <div class="sl-cands"><div v-for="c in sl.candidates" :key="c.i" class="sl-c"><div class="sl-ca" :style="{background:c.c}">{{c.i}}</div>{{c.n}}<span class="rd" :class="c.sc">{{c.s}}</span></div></div>
-      <div class="sl-acts"><button class="btn btn-primary btn-sm">Review candidates</button><button class="btn btn-secondary btn-sm">Message owner</button></div>
+      <div class="sl-acts"><button class="btn btn-primary btn-sm" @click="$router.push('/shortlists/1')">Review candidates</button><button class="btn btn-secondary btn-sm">Message owner</button></div>
     </div>
   </div>
 
@@ -507,3 +507,4 @@ const checklist = [
 [title]{cursor:help}
 @media(max-width:1024px){.tcol{grid-template-columns:1fr}}@media(max-width:768px){.kg{grid-template-columns:repeat(2,1fr)}.g-hdr,.g-row{grid-template-columns:80px 1fr}.gantt-controls{flex-direction:column}.gc-select{min-width:100%}}
 </style>
+
