@@ -26,11 +26,45 @@ const routes = [
     component: () => import('@/views/TalentSearchView.vue'),
     meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
   },
+  // Viewing another user's profile (e.g. shipowner clicks on a candidate)
   {
-    path: '/profile/:id?',
+    path: '/profile/:id',
+    name: 'ViewProfile',
+    component: () => import('@/views/SeafarerProfileView.vue'),
+    meta: { requiresAuth: true }
+  },
+  // Own profile — role-based routing
+  {
+    path: '/profile',
+    name: 'MyProfile',
+    meta: { requiresAuth: true },
+    beforeEnter: (to, from, next) => {
+      const auth = useAuthStore()
+      const role = auth.user?.role
+      if (role === 'SHIPOWNER') next({ name: 'ShipownerProfile' })
+      else if (role === 'MANNING_AGENT') next({ name: 'AgentProfile' })
+      else next({ name: 'SeafarerProfile' })
+    },
+    // Fallback component (won't render due to redirect)
+    component: () => import('@/views/SeafarerProfileView.vue')
+  },
+  {
+    path: '/my-profile/seafarer',
     name: 'SeafarerProfile',
     component: () => import('@/views/SeafarerProfileView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/my-profile/company',
+    name: 'ShipownerProfile',
+    component: () => import('@/views/ShipownerProfileView.vue'),
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
+  },
+  {
+    path: '/my-profile/agency',
+    name: 'AgentProfile',
+    component: () => import('@/views/AgentDashboardView.vue'),
+    meta: { requiresAuth: true, roles: ['MANNING_AGENT', 'ADMIN'] }
   },
   {
     path: '/shortlists',
