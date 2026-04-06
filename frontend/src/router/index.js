@@ -26,14 +26,22 @@ const routes = [
     component: () => import('@/views/TalentSearchView.vue'),
     meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
   },
-  // Viewing another user's profile (e.g. shipowner clicks on a candidate)
+  // ===== PROFILE ROUTING =====
+  // Viewing a SEAFARER's public profile (Shipowner/Agent clicks on candidate)
   {
-    path: '/profile/:id',
-    name: 'ViewProfile',
-    component: () => import('@/views/SeafarerProfileView.vue'),
+    path: '/seafarer/:id',
+    name: 'SeafarerPublic',
+    component: () => import('@/views/SeafarerPublicView.vue'),
     meta: { requiresAuth: true }
   },
-  // Own profile — role-based routing
+  // Viewing a COMPANY's public profile (Seafarer clicks on a company)
+  {
+    path: '/company/:id',
+    name: 'CompanyPublic',
+    component: () => import('@/views/CompanyPublicView.vue'),
+    meta: { requiresAuth: true }
+  },
+  // Own profile — redirects based on role
   {
     path: '/profile',
     name: 'MyProfile',
@@ -45,7 +53,6 @@ const routes = [
       else if (role === 'MANNING_AGENT') next({ name: 'AgentProfile' })
       else next({ name: 'SeafarerProfile' })
     },
-    // Fallback component (won't render due to redirect)
     component: () => import('@/views/SeafarerProfileView.vue')
   },
   {
@@ -66,6 +73,12 @@ const routes = [
     component: () => import('@/views/AgentDashboardView.vue'),
     meta: { requiresAuth: true, roles: ['MANNING_AGENT', 'ADMIN'] }
   },
+  // Legacy /profile/:id route — redirect to /seafarer/:id
+  {
+    path: '/profile/:id',
+    redirect: to => ({ name: 'SeafarerPublic', params: { id: to.params.id } })
+  },
+  // ===== END PROFILE ROUTING =====
   {
     path: '/shortlists',
     name: 'Shortlists',
@@ -128,7 +141,6 @@ const router = createRouter({
   }
 })
 
-// Navigation guards
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore()
 

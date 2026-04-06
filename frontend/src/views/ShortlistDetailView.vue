@@ -120,7 +120,7 @@ function toggleAll() {
           <div class="ai-score" :class="scoreClass(c.aiScore)">{{ c.aiScore }}</div>
           <span class="badge" :class="statusBadge(c.status)">{{ statusLabel(c.status) }}</span>
           <div class="row-actions">
-            <button class="btn-icon" title="View profile" @click="router.push(`/profile/${c.id}`)">
+            <button class="btn-icon" title="View profile" @click="router.push(`/seafarer/${c.id}`)">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
             <button class="btn-icon" title="Message">

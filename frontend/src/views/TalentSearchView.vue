@@ -33,7 +33,7 @@ function toggleShortlist(id) {
 }
 
 function viewProfile(id) {
-  router.push(`/profile/${id}`)
+  router.push(`/seafarer/${id}`)
 }
 </script>
 
