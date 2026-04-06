@@ -540,7 +540,7 @@ const profile = ref({
 .doc-expiring{background:rgba(230,81,0,0.04);border-radius:4px;padding-left:4px;padding-right:4px}
 .doc-shared{color:#1B5E20;font-weight:bold}
 .doc-private{font-size:10px;color:var(--color-text-tertiary)}
-.docs-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.docs-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:relative;z-index:10}
 .btn-sm{font-size:12px;padding:8px 16px}
 .btn-link{background:none;border:none;color:var(--color-primary);font-size:12px;cursor:pointer;padding:4px 8px;font-weight:500}
 .btn-link:hover{text-decoration:underline}
@@ -551,6 +551,7 @@ const profile = ref({
 .doc-table-head{display:grid;gap:8px;padding:8px 0;border-bottom:2px solid var(--color-border);font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
 .doc-row{display:grid;gap:8px;padding:10px 0;border-bottom:1px solid var(--color-border);align-items:center;font-size:12px;transition:background 0.15s}
 </style>
+
 
 
 
