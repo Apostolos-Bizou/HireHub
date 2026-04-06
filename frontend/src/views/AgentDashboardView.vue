@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 const activeTab = ref(0)
-const tabs = ['Shortlist analyzer', 'Deployment readiness', 'Principal matching', 'Crew calendar', 'AI intelligence', 'Compliance']
+const tabs = ['Crew calendar', 'AI intelligence', 'Principal matching', 'Shortlist analyzer', 'Deployment readiness', 'Compliance']
 const expandedCandidate = ref(null)
 const selPrincipal = ref(0)
 const selVessel = ref(0)
@@ -199,7 +199,7 @@ const checklist = [
   <div class="dtabs"><button v-for="(t,i) in tabs" :key="i" class="dtab" :class="{active:activeTab===i}" @click="activeTab=i">{{t}}</button></div>
 
   <!-- Tab 0: Shortlist Analyzer -->
-  <div v-if="activeTab===0">
+  <div v-if="activeTab===3">
     <div v-for="sl in shortlists" :key="sl.owner" class="card sec sl-card">
       <div class="sl-top"><div class="sl-ow"><div class="sl-av" :style="{background:sl.color}">{{sl.i}}</div><div><strong>{{sl.owner}}</strong><span class="sl-tm">{{sl.time}} · {{sl.urgency}}</span></div></div><span class="rd" :class="sl.readyPct>=80?'rg':sl.readyPct>=50?'ry':'rr'">{{sl.readyPct}}% ready</span></div>
       <div class="sl-pos">{{sl.position}}</div>
@@ -210,7 +210,7 @@ const checklist = [
   </div>
 
   <!-- Tab 1: Deployment Readiness -->
-  <div v-if="activeTab===1">
+  <div v-if="activeTab===4">
     <div class="card sec">
       <div class="dr-leg"><span><span class="dot dg"></span> Ready</span><span><span class="dot dy"></span> Needs action</span><span><span class="dot dr"></span> Not ready</span><span class="dr-r">AI · Crew · DR scores</span></div>
       <div v-for="(c,ci) in readiness" :key="c.i" class="dr-cand" @click="expandedCandidate=expandedCandidate===ci?null:ci">
@@ -229,7 +229,7 @@ const checklist = [
   </div>
 
   <!-- Tab 3: Crew Calendar with Gantt -->
-  <div v-if="activeTab===3">
+  <div v-if="activeTab===0">
     <div class="card sec">
       <div class="gantt-controls">
         <div class="gc-item">
@@ -293,7 +293,7 @@ const checklist = [
 
 
   <!-- Tab 4: AI Intelligence -->
-  <div v-if="activeTab===4">
+  <div v-if="activeTab===1">
     <div class="ai-subtabs">
       <button v-for="(st,si) in aiSubTabs" :key="si" class="ai-stab" :class="{active:aiSubTab===si}" @click="aiSubTab=si">{{st}}</button>
     </div>
@@ -459,3 +459,6 @@ const checklist = [
 .cl-list{display:flex;flex-direction:column;gap:4px}.cl-item{display:flex;align-items:center;gap:8px;padding:4px 0;font:var(--font-caption)}.cl-icon{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}.cli-done{background:#E8F5E9;color:#1B5E20}.cli-prog{background:#FFF3E0;color:#E65100}.cli-pend{background:var(--color-surface);color:var(--color-text-tertiary)}.cl-grey{color:var(--color-text-tertiary)}.cl-note{font-size:10px;color:#E65100;margin-left:4px}
 @media(max-width:1024px){.tcol{grid-template-columns:1fr}}@media(max-width:768px){.kg{grid-template-columns:repeat(2,1fr)}.g-hdr,.g-row{grid-template-columns:80px 1fr}.gantt-controls{flex-direction:column}.gc-select{min-width:100%}}
 </style>
+
+
+
