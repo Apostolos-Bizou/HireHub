@@ -27,6 +27,10 @@ function selectAll() {
 
 function selectNone() { selectedDocs.value.clear() }
 
+function handleUpload(section) {
+  alert("Upload to " + section + " — File picker would open here. In production this connects to Azure Blob Storage.")
+}
+
 function shareDocs() {
   alert('Sharing ' + selectedDocs.value.size + ' documents with principal...\n\nDocuments:\n' + [...selectedDocs.value].join('\n'))
   shareMode.value = false
@@ -175,7 +179,7 @@ const profile = ref({
       </div>
 
       <template v-if="activeTab === 'overview'">
-        <div class="card section"><h2>Sea Service Record</h2>
+        <div class="card section"><div class="section-header"><h2>Sea Service Record</h2><button class="btn-upload" @click="handleUpload('Sea Service')">+ Add</button></div>
           <div v-for="ss in profile.seaServiceRecords.slice(0,3)" :key="ss.id" class="timeline-item">
             <div class="timeline-dot" :class="ss.rankHeld==='Cadet'?'dot-cadet':ss.rankHeld.includes('Chief')?'dot-chief':'dot-officer'"></div>
             <div class="timeline-content"><strong>{{ ss.rankHeld }} &mdash; {{ ss.vesselName }}</strong>
@@ -185,7 +189,7 @@ const profile = ref({
           </div>
           <button class="show-more" @click="activeTab='service'">Show all {{ profile.seaServiceRecords.length }} records &rarr;</button>
         </div>
-        <div class="card section"><h2>Certificates &amp; Licenses</h2>
+        <div class="card section"><div class="section-header"><h2>Certificates &amp; Licenses</h2><button class="btn-upload" @click="handleUpload('Certificate')">+ Upload</button></div>
           <div v-for="c in profile.certificates.slice(0,5)" :key="c.id" class="cert-row">
             <div class="cert-info"><strong>{{ c.certName }}</strong><p>{{ c.issuingAuthority }} | Expires: {{ c.expiryDate }}</p></div>
             <div class="cert-badges">
@@ -194,11 +198,11 @@ const profile = ref({
           </div>
           <button class="show-more" @click="activeTab='certs'">Show all {{ profile.certificates.length }} certificates &rarr;</button>
         </div>
-        <div class="card section"><h2>Skills &amp; Endorsements</h2>
+        <div class="card section"><div class="section-header"><h2>Skills &amp; Endorsements</h2><button class="btn-upload" @click="handleUpload('Skill')">+ Add</button></div>
           <div class="skills-grid"><span v-for="s in profile.skills.slice(0,8)" :key="s.name" class="skill-tag">{{ s.name }} <small>&middot; {{ s.endorsements }}</small></span></div>
           <button class="show-more" @click="activeTab='skills'">Show all {{ profile.skills.length }} skills &rarr;</button>
         </div>
-        <div class="card section"><h2>Awards &amp; Recognition</h2>
+        <div class="card section"><div class="section-header"><h2>Awards &amp; Recognition</h2><button class="btn-upload" @click="handleUpload('Award')">+ Add</button></div>
           <div v-for="a in profile.awards" :key="a.title" class="award-item">
             <span class="award-icon">&#127942;</span><div><strong>{{ a.title }}</strong><p>{{ a.issuer }} &middot; {{ a.year }}</p><p class="desc">{{ a.description }}</p></div>
           </div>
@@ -206,7 +210,7 @@ const profile = ref({
       </template>
 
       <template v-if="activeTab === 'service'">
-        <div class="card section"><h2>Complete Sea Service Record</h2>
+        <div class="card section"><div class="section-header"><h2>Complete Sea Service Record</h2><button class="btn-upload" @click="handleUpload('Sea Service')">+ Add Record</button></div>
           <p class="section-sub">{{ profile.seaServiceRecords.length }} vessels | {{ profile.yearsOfExperience }} years | 4 ranks held</p>
           <div v-for="ss in profile.seaServiceRecords" :key="ss.id" class="timeline-item">
             <div class="timeline-dot" :class="ss.rankHeld==='Cadet'?'dot-cadet':ss.rankHeld.includes('Chief')?'dot-chief':'dot-officer'"></div>
@@ -219,7 +223,7 @@ const profile = ref({
       </template>
 
       <template v-if="activeTab === 'certs'">
-        <div class="card section"><h2>All Certificates &amp; Licenses</h2>
+        <div class="card section"><div class="section-header"><h2>All Certificates &amp; Licenses</h2><button class="btn-upload" @click="handleUpload('Certificate')">+ Upload Certificate</button></div>
           <p class="section-sub">{{ profile.certificates.filter(c=>c.status==='VALID').length }} valid | {{ profile.certificates.filter(c=>c.status==='EXPIRING').length }} expiring | {{ profile.certificates.filter(c=>c.verifiedStatus==='VERIFIED').length }} AI verified</p>
           <div v-for="c in profile.certificates" :key="c.id" class="cert-row">
             <div class="cert-info"><strong>{{ c.certName }}</strong><p>{{ c.issuingAuthority }}</p><p class="date">Issued: {{ c.issueDate }} | Expires: {{ c.expiryDate }}</p></div>
@@ -232,7 +236,7 @@ const profile = ref({
       </template>
 
       <template v-if="activeTab === 'skills'">
-        <div class="card section"><h2>Skills &amp; Endorsements</h2>
+        <div class="card section"><div class="section-header"><h2>Skills &amp; Endorsements</h2><button class="btn-upload" @click="handleUpload('Skill')">+ Add</button></div>
           <div class="skills-list">
             <div v-for="s in profile.skills" :key="s.name" class="skill-item">
               <div class="skill-info"><strong>{{ s.name }}</strong><span>{{ s.endorsements }}</span></div>
@@ -240,22 +244,22 @@ const profile = ref({
             </div>
           </div>
         </div>
-        <div class="card section"><h2>Awards &amp; Recognition</h2>
+        <div class="card section"><div class="section-header"><h2>Awards &amp; Recognition</h2><button class="btn-upload" @click="handleUpload('Award')">+ Add</button></div>
           <div v-for="a in profile.awards" :key="a.title" class="award-item">
             <span class="award-icon">&#127942;</span><div><strong>{{ a.title }}</strong><p>{{ a.issuer }} &middot; {{ a.year }}</p><p class="desc">{{ a.description }}</p></div>
           </div>
         </div>
-        <div class="card section"><h2>Education</h2>
+        <div class="card section"><div class="section-header"><h2>Education</h2><button class="btn-upload" @click="handleUpload('Education')">+ Add</button></div>
           <div v-for="e in profile.education" :key="e.institutionName" class="edu-item">
             <span class="award-icon">&#127891;</span><div><strong>{{ e.institutionName }}</strong><p>{{ e.degree }} ({{ e.endYear }})</p><p class="desc">{{ e.description }}</p></div>
           </div>
         </div>
-        <div class="card section"><h2>Languages</h2>
+        <div class="card section"><div class="section-header"><h2>Languages</h2><button class="btn-upload" @click="handleUpload('Language')">+ Add</button></div>
           <div v-for="l in profile.languages" :key="l.name" class="lang-item">
             <span style="font-size:20px">{{ l.flag }}</span><div><strong>{{ l.name }}</strong><span class="lang-level">{{ l.level }}</span></div>
           </div>
         </div>
-        <div class="card section"><h2>Interests</h2>
+        <div class="card section"><div class="section-header"><h2>Interests</h2><button class="btn-upload" @click="handleUpload('Interest')">+ Add</button></div>
           <div class="skills-grid"><span v-for="i in profile.interests" :key="i" class="badge badge-info">{{ i }}</span></div>
         </div>
       </template>
@@ -339,7 +343,11 @@ const profile = ref({
 .tabs-bar{display:flex;background:white;border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden}
 .tabs-bar button{flex:1;padding:12px 16px;border:none;background:none;font-size:13px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
 .tabs-bar button:hover{background:var(--color-surface)}.tabs-bar button.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:rgba(10,102,194,.04)}
-.section{padding:16px 20px;margin-top:12px}.section h2{font-size:16px;font-weight:600;margin-bottom:16px}
+.section{padding:16px 20px;margin-top:12px}.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.section-header h2{margin-bottom:0}
+.btn-upload{background:none;border:1.5px solid var(--color-primary);color:var(--color-primary);font-size:12px;font-weight:500;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-upload:hover{background:var(--color-primary);color:white}
+.section h2{font-size:16px;font-weight:600;margin-bottom:16px}
 .section-sub{font-size:12px;color:var(--color-text-tertiary);margin-top:-12px;margin-bottom:16px}
 .timeline-item{display:flex;gap:12px;margin-bottom:20px;padding-left:4px}
 .timeline-dot{width:12px;height:12px;border-radius:50%;margin-top:4px;flex-shrink:0}
