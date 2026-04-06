@@ -1,0 +1,133 @@
+# HireHub CI/CD Pipeline
+# Triggers on push to main: build → test → deploy to Azure
+
+name: HireHub CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  AZURE_RG: hirehub-rg
+  ACR_NAME: hirehub
+  ACR_LOGIN: hirehub.azurecr.io
+
+jobs:
+  # ── AI Service: lint + test ──────────────────────────────
+  ai-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest tests/ -v
+
+  # ── Backend: compile + test ──────────────────────────────
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+      - run: mvn compile -B -q
+      - run: mvn test -B
+
+  # ── Frontend: build ─────────────────────────────────────
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  # ── Deploy to Azure (only on main push) ─────────────────
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [ai-test, backend-test, frontend-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: ACR Login
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ env.ACR_LOGIN }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # Build & push backend
+      - name: Build & push backend
+        run: |
+          docker build -t $ACR_LOGIN/hirehub-backend:${{ github.sha }} -t $ACR_LOGIN/hirehub-backend:latest ./backend
+          docker push $ACR_LOGIN/hirehub-backend:${{ github.sha }}
+          docker push $ACR_LOGIN/hirehub-backend:latest
+
+      # Build & push AI service
+      - name: Build & push AI service
+        run: |
+          docker build -t $ACR_LOGIN/hirehub-ai:${{ github.sha }} -t $ACR_LOGIN/hirehub-ai:latest ./ai-service
+          docker push $ACR_LOGIN/hirehub-ai:${{ github.sha }}
+          docker push $ACR_LOGIN/hirehub-ai:latest
+
+      # Build & push frontend
+      - name: Build & push frontend
+        run: |
+          docker build -t $ACR_LOGIN/hirehub-frontend:${{ github.sha }} -t $ACR_LOGIN/hirehub-frontend:latest --target production ./frontend
+          docker push $ACR_LOGIN/hirehub-frontend:${{ github.sha }}
+          docker push $ACR_LOGIN/hirehub-frontend:latest
+
+      # Deploy backend
+      - name: Deploy backend
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: hirehub-api
+          images: ${{ env.ACR_LOGIN }}/hirehub-backend:${{ github.sha }}
+
+      # Deploy frontend
+      - name: Deploy frontend
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: hirehub-web
+          images: ${{ env.ACR_LOGIN }}/hirehub-frontend:${{ github.sha }}
+
+      # Deploy AI service (Container Instance)
+      - name: Deploy AI service
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az container create \
+              --resource-group ${{ env.AZURE_RG }} \
+              --name hirehub-ai \
+              --image ${{ env.ACR_LOGIN }}/hirehub-ai:${{ github.sha }} \
+              --cpu 2 --memory 4 \
+              --ports 8000 \
+              --dns-name-label hirehub-ai \
+              --registry-login-server ${{ env.ACR_LOGIN }} \
+              --registry-username ${{ secrets.ACR_USERNAME }} \
+              --registry-password ${{ secrets.ACR_PASSWORD }}
