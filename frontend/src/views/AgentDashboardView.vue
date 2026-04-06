@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { ref, computed } from 'vue'
 const activeTab = ref(0)
 const tabs = [
@@ -141,92 +141,161 @@ const aiSubTabs = [
   {name:'Principal intel', tip:'Τι προτιμάει κάθε πλοιοκτήτης — εθνικότητα, εμπειρία, CrewScore, ιστορικό τοποθετήσεων'},
   {name:'Auto-checklist', tip:'Αυτόματη λίστα ελέγχου 9 βημάτων — τι ολοκληρώθηκε, τι εκκρεμεί, τι περιμένει'}
 ]
-const selectedRequest = ref(0)
 const selectedDeployCandidate = ref(0)
-const requestCandidates = [
-  // Request 0: Varship - 3rd Officer
-  [
-    { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
-      costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
-      notes:'All documents valid. No renewals needed. Direct deployment.' },
-    { name:'Ruslan Goncharov', i:'RG', color:'#E7A33E', nat:'Ukrainian', origin:'Odessa, Ukraine', dest:'Piraeus, Greece', rank:'2nd Officer',
-      costs:{medical:280,travel:420,flag:160,visa:150,dmw:0,insurance:250,agency:400,renewals:190},
-      notes:'Greece flag endorsement missing. Higher total due to renewals.' },
-    { name:'Lazar Stoyanov', i:'LS', color:'#B71C1C', nat:'Bulgarian', origin:'Varna, Bulgaria', dest:'Piraeus, Greece', rank:'AB',
-      costs:{medical:400,travel:280,flag:160,visa:0,insurance:250,agency:400,dmw:0,renewals:710},
-      notes:'STCW renewal + Medical PEME expired. Panama flag. High risk — 21 day timeline.' }
-  ],
-  // Request 1: Diana - Chief Engineer
-  [
-    { name:'Dmitry Petrov', i:'DP', color:'#1D9E75', nat:'Russian', origin:'St Petersburg, Russia', dest:'Piraeus, Greece', rank:'Chief Engineer',
-      costs:{medical:300,travel:520,flag:0,visa:180,dmw:0,insurance:280,agency:400,renewals:0},
-      notes:'All documents valid. Experienced Chief Engineer. Ready for deployment.' },
-    { name:'Raj Patel', i:'RP', color:'#1D9E75', nat:'Indian', origin:'Mumbai, India', dest:'Piraeus, Greece', rank:'Chief Engineer',
-      costs:{medical:280,travel:680,flag:140,visa:200,dmw:0,insurance:280,agency:400,renewals:0},
-      notes:'Needs Liberia flag endorsement. Travel cost higher from Mumbai.' },
-    { name:'Miguel Santos', i:'MS', color:'#1D9E75', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'2nd Engineer',
-      costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
-      notes:'All documents valid. Filipino crew preferred by Diana for engine room.' },
-    { name:'Chen Wei', i:'CW', color:'#E7A33E', nat:'Chinese', origin:'Shanghai, China', dest:'Piraeus, Greece', rank:'3rd Engineer',
-      costs:{medical:320,travel:750,flag:160,visa:220,dmw:0,insurance:250,agency:400,renewals:350},
-      notes:'Medical due for renewal in 45 days. Flag endorsement needed.' }
-  ]
+const deployCandidates = [
+  { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
+    costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
+    notes:'All documents valid. No renewals needed. Direct deployment.' },
+  { name:'Ruslan Goncharov', i:'RG', color:'#E7A33E', nat:'Ukrainian', origin:'Odessa, Ukraine', dest:'Piraeus, Greece', rank:'2nd Officer',
+    costs:{medical:280,travel:420,flag:160,visa:150,dmw:0,insurance:250,agency:400,renewals:190},
+    notes:'Greece flag endorsement missing — est. $160 + 5 days processing. Higher total due to renewals.' },
+  { name:'Lazar Stoyanov', i:'LS', color:'#B71C1C', nat:'Bulgarian', origin:'Varna, Bulgaria', dest:'Piraeus, Greece', rank:'AB',
+    costs:{medical:400,travel:280,flag:160,visa:0,insurance:250,agency:400,dmw:0,renewals:710},
+    notes:'STCW renewal $350 + Medical PEME $400 (expired). Panama flag $160. High risk — 21 day timeline.' }
 ]
-const deployCandidates = computed(() => requestCandidates[selectedRequest.value] || requestCandidates[0])
-const selectedCand = computed(() => deployCandidates.value[selectedDeployCandidate.value])
+const selectedCand = computed(() => deployCandidates.value ? deployCandidates.value[selectedDeployCandidate.value] : null)
 const candTotal = computed(() => selectedCand.value ? Object.values(selectedCand.value.costs).reduce((s,v) => s + v, 0) : 0)
-const compareData = [
-  {label:'AI score',v:['92','87','68'],best:0},
-  {label:'CrewScore',v:['87','82','64'],best:0},
-  {label:'DR score',v:['96','68','32'],best:0},
-  {label:'Sea service',v:['4 yrs','6 yrs','2 yrs'],best:1},
-  {label:'Nationality',v:['Filipino','Ukrainian','Bulgarian'],best:-1},
-  {label:'COC',v:['Valid 2030','Valid 2029','Valid 2028'],best:0},
-  {label:'STCW',v:['Valid 2028','Valid 2027','Expired!'],best:0,bad:2},
-  {label:'Flag endorse.',v:['Panama active','Greece missing','Panama expired'],best:0,warn:1,bad:2},
-  {label:'Medical',v:['Valid Sep 2026','Valid Jul 2026','Expired!'],best:0,bad:2},
-  {label:'Availability',v:['May 2026','Jun 2026','May 2026'],best:0},
-  {label:'Est. cost',v:['$2,400','$2,850','$3,200'],best:0},
-  {label:'Est. timeline',v:['5 days','12 days','21 days'],best:0,warn:1,bad:2},
-  {label:'AI verdict',v:['Best match','Needs flag','Not recommended'],best:0,warn:1,bad:2}
-]
-const deploySteps = [
-  {title:'Shortlist received from Varship',sub:'Apr 5, 2026',day:'Day 0',status:'done'},
-  {title:'Candidate vetting & verification',sub:'Apr 6, 2026 — All docs verified',day:'Day 1',status:'done'},
-  {title:'Medical examination (PEME)',sub:'Apr 7-8 — Manila Doctors Hospital, $350',day:'Day 2-3',status:'prog'},
-  {title:'Contract signing & DMW processing',sub:'Apr 9 — OEC issuance, insurance',day:'Day 4',status:'pend'},
-  {title:'Travel booking & departure',sub:'Apr 10 — Manila → Piraeus via Doha, $890',day:'Day 5',status:'pend'},
-  {title:'Arrival & embarkation',sub:'Apr 11 — Join MT Varship Glory',day:'Day 6',status:'pend'}
-]
-const principalIntel = {
-  prefs:[
-    {k:'Preferred nationality',v:'Filipino (78% of hires)'},
-    {k:'Min experience',v:'4+ years sea service'},
-    {k:'Min CrewScore',v:'80+'},
-    {k:'Vessel focus',v:'Oil/Chemical Tankers'},
-    {k:'Avg response time',v:'1.2 days'},
-    {k:'Acceptance rate',v:'96%'},
-    {k:'Total placements',v:'142 (since 2024)'},
-    {k:'Avg contract',v:'6.2 months'}
+
+const allCompareData = [
+  // Request 0: Varship 3rd Officer
+  [
+    {label:'AI score',v:['92','87','68'],best:0},
+    {label:'CrewScore',v:['87','82','64'],best:0},
+    {label:'DR score',v:['96','68','32'],best:0},
+    {label:'Sea service',v:['4 yrs','6 yrs','2 yrs'],best:1},
+    {label:'Nationality',v:['Filipino','Ukrainian','Bulgarian'],best:-1},
+    {label:'COC',v:['Valid 2030','Valid 2029','Valid 2028'],best:0},
+    {label:'STCW',v:['Valid 2028','Valid 2027','Expired!'],best:0,bad:2},
+    {label:'Flag endorse.',v:['Panama active','Greece missing','Panama expired'],best:0,warn:1,bad:2},
+    {label:'Medical',v:['Valid Sep 2026','Valid Jul 2026','Expired!'],best:0,bad:2},
+    {label:'Availability',v:['May 2026','Jun 2026','May 2026'],best:0},
+    {label:'Est. cost',v:['$2,240','$1,850','$2,200'],best:1},
+    {label:'Est. timeline',v:['5 days','12 days','21 days'],best:0,warn:1,bad:2},
+    {label:'AI verdict',v:['Best match','Needs flag','Not recommended'],best:0,warn:1,bad:2}
   ],
-  history:[
-    {date:'Mar 2026',role:'Chief Engineer → MT Aegean Sun',who:'Raj Patel (Indian, 14 yrs)',cost:'$3,100',days:'7d'},
-    {date:'Feb 2026',role:'AB → MT Varship Star',who:'Ionescu R. (Romanian, 5 yrs)',cost:'$1,800',days:'4d'},
-    {date:'Jan 2026',role:'Chief Officer → MT Varship Glory',who:'Varias S. (Greek, 12 yrs)',cost:'$2,200',days:'6d'},
-    {date:'Dec 2025',role:'Bosun → MT Aegean Sun',who:'Ahmad H. (Indonesian, 8 yrs)',cost:'$1,600',days:'5d'}
+  // Request 1: Diana Chief Engineer
+  [
+    {label:'AI score',v:['95','86','89','74'],best:0},
+    {label:'CrewScore',v:['91','83','84','69'],best:0},
+    {label:'DR score',v:['94','78','92','52'],best:0},
+    {label:'Sea service',v:['12 yrs','14 yrs','7 yrs','4 yrs'],best:1},
+    {label:'Nationality',v:['Russian','Indian','Filipino','Chinese'],best:-1},
+    {label:'COC',v:['Valid 2029','Valid 2028','Valid 2030','Valid 2027'],best:2},
+    {label:'STCW',v:['Valid 2028','Valid 2027','Valid 2029','Expiring'],best:2,warn:3},
+    {label:'Flag endorse.',v:['Marshall Is. active','Needs Liberia','Marshall Is. active','Needs flag'],best:0,warn:1,bad:3},
+    {label:'Medical',v:['Valid Aug 2026','Valid Jun 2026','Valid Oct 2026','Due in 45d'],best:2,warn:3},
+    {label:'Availability',v:['Apr 2026','May 2026','May 2026','Jun 2026'],best:0},
+    {label:'Est. cost',v:['$1,680','$1,980','$2,240','$2,450'],best:0},
+    {label:'Est. timeline',v:['4 days','7 days','5 days','14 days'],best:0,warn:3,bad:3},
+    {label:'AI verdict',v:['Best match','Strong option','Good backup','Needs renewals'],best:0,warn:3}
   ]
-}
-const checklist = [
-  {text:'Shortlist received & accepted',s:'done'},
-  {text:'Candidate identity verified',s:'done'},
-  {text:'COC verified (valid Dec 2030)',s:'done'},
-  {text:'STCW verified (valid Aug 2028)',s:'done'},
-  {text:'Flag endorsement confirmed (Panama)',s:'done'},
-  {text:'Medical examination (PEME)',s:'prog',note:'Scheduled Apr 7'},
-  {text:'Contract signing & DMW processing',s:'prog',note:'Pending medical'},
-  {text:'Travel booking (Manila → Piraeus)',s:'pend'},
-  {text:'Embarkation confirmation',s:'pend'}
 ]
+const compareData = computed(() => allCompareData[selectedRequest.value] || allCompareData[0])
+const compareCandidates = computed(() => deployCandidates.value || [])
+
+const allDeploySteps = [
+  // Request 0: Varship
+  [
+    {title:'Shortlist received from Varship',sub:'Apr 5, 2026',day:'Day 0',status:'done'},
+    {title:'Candidate vetting & verification',sub:'Apr 6 — All docs verified, CrewScore 87',day:'Day 1',status:'done'},
+    {title:'Medical examination (PEME)',sub:'Apr 7-8 — Manila Doctors Hospital, $350',day:'Day 2-3',status:'prog'},
+    {title:'Contract signing & DMW processing',sub:'Apr 9 — OEC issuance, insurance, bonds',day:'Day 4',status:'pend'},
+    {title:'Travel booking & departure',sub:'Apr 10 — Manila → Piraeus via Doha, $890',day:'Day 5',status:'pend'},
+    {title:'Arrival & embarkation',sub:'Apr 11 — Join MT Varship Glory at Piraeus',day:'Day 6',status:'pend'}
+  ],
+  // Request 1: Diana
+  [
+    {title:'Shortlist received from Diana Shipping',sub:'Apr 4, 2026',day:'Day 0',status:'done'},
+    {title:'Candidate vetting & verification',sub:'Apr 5 — All docs verified, CrewScore 91',day:'Day 1',status:'done'},
+    {title:'Medical examination (PEME)',sub:'Apr 6 — St Petersburg clinic, $300',day:'Day 2',status:'done'},
+    {title:'Contract signing & processing',sub:'Apr 7 — Insurance, bonds, travel docs',day:'Day 3',status:'prog'},
+    {title:'Travel booking & departure',sub:'Apr 8 — St Petersburg → Piraeus, $520',day:'Day 4',status:'pend'},
+    {title:'Arrival & embarkation',sub:'Apr 9 — Join MV Diana Explorer at Piraeus',day:'Day 5',status:'pend'}
+  ]
+]
+const deploySteps = computed(() => allDeploySteps[selectedRequest.value] || allDeploySteps[0])
+const deployKpis = computed(() => {
+  const r = selectedRequest.value
+  return r === 0
+    ? {days:'5 days',cost:'$2,240',dr:'96',target:'May 15',cand:'Juan Dela Cruz',vessel:'MT Varship Glory'}
+    : {days:'4 days',cost:'$1,680',dr:'94',target:'Jun 1',cand:'Dmitry Petrov',vessel:'MV Diana Explorer'}
+})
+
+const allPrincipalIntel = [
+  // Request 0: Varship
+  {
+    name:'Varship Shipping Co.',
+    prefs:[
+      {k:'Preferred nationality',v:'Filipino (78% of hires)'},
+      {k:'Min experience',v:'4+ years sea service'},
+      {k:'Min CrewScore',v:'80+'},
+      {k:'Vessel focus',v:'Oil/Chemical Tankers'},
+      {k:'Avg response time',v:'1.2 days'},
+      {k:'Acceptance rate',v:'96%'},
+      {k:'Total placements',v:'142 (since 2024)'},
+      {k:'Avg contract',v:'6.2 months'}
+    ],
+    history:[
+      {date:'Mar 2026',role:'Chief Engineer → MT Aegean Sun',who:'Raj Patel (Indian, 14 yrs)',cost:'$3,100',days:'7d'},
+      {date:'Feb 2026',role:'AB → MT Varship Star',who:'Ionescu R. (Romanian, 5 yrs)',cost:'$1,800',days:'4d'},
+      {date:'Jan 2026',role:'Chief Officer → MT Varship Glory',who:'Varias S. (Greek, 12 yrs)',cost:'$2,200',days:'6d'},
+      {date:'Dec 2025',role:'Bosun → MT Aegean Sun',who:'Ahmad H. (Indonesian, 8 yrs)',cost:'$1,600',days:'5d'}
+    ]
+  },
+  // Request 1: Diana
+  {
+    name:'Diana Shipping',
+    prefs:[
+      {k:'Preferred nationality',v:'EU officers (65% of hires)'},
+      {k:'Min experience',v:'8+ years sea service'},
+      {k:'Min CrewScore',v:'75+'},
+      {k:'Vessel focus',v:'Bulk Carriers'},
+      {k:'Avg response time',v:'1.8 days'},
+      {k:'Acceptance rate',v:'91%'},
+      {k:'Total placements',v:'98 (since 2024)'},
+      {k:'Avg contract',v:'7.1 months'}
+    ],
+    history:[
+      {date:'Mar 2026',role:'2nd Officer → MV Parthenon',who:'Santos J. (Filipino, 6 yrs)',cost:'$2,400',days:'6d'},
+      {date:'Feb 2026',role:'Bosun → MV Diana Explorer',who:'Kolev B. (Bulgarian, 8 yrs)',cost:'$1,500',days:'4d'},
+      {date:'Jan 2026',role:'Chief Officer → MV Parthenon',who:'Ivanov S. (Russian, 10 yrs)',cost:'$1,900',days:'5d'},
+      {date:'Nov 2025',role:'3rd Engineer → MV Diana Explorer',who:'Wei L. (Chinese, 5 yrs)',cost:'$2,100',days:'8d'}
+    ]
+  }
+]
+const principalIntel = computed(() => allPrincipalIntel[selectedRequest.value] || allPrincipalIntel[0])
+
+const allChecklists = [
+  // Request 0: Varship - Juan Dela Cruz
+  [
+    {text:'Shortlist received & accepted',s:'done'},
+    {text:'Candidate identity verified',s:'done'},
+    {text:'COC verified (valid Dec 2030)',s:'done'},
+    {text:'STCW verified (valid Aug 2028)',s:'done'},
+    {text:'Flag endorsement confirmed (Panama)',s:'done'},
+    {text:'Medical examination (PEME)',s:'prog',note:'Scheduled Apr 7'},
+    {text:'Contract signing & DMW processing',s:'prog',note:'Pending medical'},
+    {text:'Travel booking (Manila → Piraeus)',s:'pend'},
+    {text:'Embarkation confirmation',s:'pend'}
+  ],
+  // Request 1: Diana - Dmitry Petrov
+  [
+    {text:'Shortlist received & accepted',s:'done'},
+    {text:'Candidate identity verified',s:'done'},
+    {text:'COC verified (valid Mar 2029)',s:'done'},
+    {text:'STCW verified (valid Nov 2028)',s:'done'},
+    {text:'Flag endorsement confirmed (Marshall Islands)',s:'done'},
+    {text:'Medical examination (PEME)',s:'done',note:'Completed Apr 6'},
+    {text:'Contract signing & processing',s:'prog',note:'In progress'},
+    {text:'Travel booking (St Petersburg → Piraeus)',s:'pend'},
+    {text:'Embarkation confirmation',s:'pend'}
+  ]
+]
+const checklist = computed(() => allChecklists[selectedRequest.value] || allChecklists[0])
+const checkDone = computed(() => checklist.value.filter(c => c.s === 'done').length)
+const checkProg = computed(() => checklist.value.filter(c => c.s === 'prog').length)
+const checkPend = computed(() => checklist.value.filter(c => c.s === 'pend').length)
+const checkPct = computed(() => Math.round(checkDone.value / checklist.value.length * 100))
 
 </script>
 <template>
@@ -242,7 +311,7 @@ const checklist = [
       <div class="sl-pos">{{sl.position}}</div>
       <div class="sl-bar"><div class="sl-fill" :style="{width:sl.readyPct+'%',background:sl.readyPct>=80?'#1B5E20':'#E7A33E'}"></div></div>
       <div class="sl-cands"><div v-for="c in sl.candidates" :key="c.i" class="sl-c"><div class="sl-ca" :style="{background:c.c}">{{c.i}}</div>{{c.n}}<span class="rd" :class="c.sc">{{c.s}}</span></div></div>
-      <div class="sl-acts"><button class="btn btn-primary btn-sm" @click="$router.push('/shortlists/1')">Review candidates</button><button class="btn btn-secondary btn-sm">Message owner</button></div>
+      <div class="sl-acts"><button class="btn btn-primary btn-sm">Review candidates</button><button class="btn btn-secondary btn-sm">Message owner</button></div>
     </div>
   </div>
 
@@ -338,11 +407,7 @@ const checklist = [
     <!-- AI Cost Calculator -->
     <div v-if="aiSubTab===0">
       <div class="card sec">
-        <h3>Select incoming request</h3>
-        <select v-model="selectedRequest" @change="selectedDeployCandidate=0" class="gc-select" style="width:100%;margin-bottom:12px">
-          <option v-for="(sl,si) in shortlists" :key="si" :value="si">{{sl.owner}} — {{sl.position}}</option>
-        </select>
-        <h3>Candidates from this request</h3>
+        <h3>Select candidate for cost analysis</h3>
         <div class="cand-select">
           <div v-for="(dc,di) in deployCandidates" :key="di" class="cand-opt" :class="{active:selectedDeployCandidate===di}" @click="selectedDeployCandidate=di">
             <div class="cand-av" :style="{background:dc.color}">{{dc.i}}</div>
@@ -401,12 +466,12 @@ const checklist = [
     <!-- Candidate Compare -->
     <div v-if="aiSubTab===1">
       <div class="card sec">
-        <h3>Side-by-side — 3rd Officer for MT Varship Glory</h3>
+        <h3>Side-by-side — {{shortlists[selectedRequest].position}}</h3>
         <div class="cmp-grid">
-          <div class="cmp-hdr">Criteria</div>
-          <div class="cmp-hdr"><div class="av-sm" style="background:#0A66C2">JD</div> Juan Dela Cruz</div>
-          <div class="cmp-hdr"><div class="av-sm" style="background:#E7A33E">RG</div> Ruslan Goncharov</div>
-          <div class="cmp-hdr"><div class="av-sm" style="background:#B71C1C">LS</div> Lazar Stoyanov</div>
+          <div class="cmp-hdr">Criteria</div><div v-for="dc in compareCandidates" :key="dc.i" class="cmp-hdr"><div class="av-sm" :style="{background:dc.color}">{{dc.i}}</div> {{dc.name}}</div>
+          
+          
+          
           <template v-for="(row,ri) in compareData" :key="ri">
             <div class="cmp-label">{{row.label}}</div>
             <div v-for="(v,vi) in row.v" :key="vi" class="cmp-cell" :class="{'cmp-best':row.best===vi,'cmp-warn':row.warn===vi,'cmp-bad':row.bad===vi}">{{v}}</div>
@@ -418,12 +483,12 @@ const checklist = [
     <!-- Deploy Timeline -->
     <div v-if="aiSubTab===2">
       <div class="card sec">
-        <h3>Deployment timeline — Juan Dela Cruz → MT Varship Glory</h3>
+        <h3>Deployment timeline — {{deployKpis.cand}} → {{deployKpis.vessel}}</h3>
         <div class="tl-kpis">
-          <div class="mc"><div class="mc-v" style="color:#1B5E20">5 days</div><div class="mc-l">Est. total</div></div>
-          <div class="mc"><div class="mc-v" style="color:#0A66C2">$2,400</div><div class="mc-l">Est. cost</div></div>
-          <div class="mc"><div class="mc-v" style="color:#1B5E20">96</div><div class="mc-l">DR score</div></div>
-          <div class="mc"><div class="mc-v">May 15</div><div class="mc-l">Target date</div></div>
+          <div class="mc"><div class="mc-v" style="color:#1B5E20">{{deployKpis.days}}</div><div class="mc-l">Est. total</div></div>
+          <div class="mc"><div class="mc-v" style="color:#0A66C2">{{deployKpis.cost}}</div><div class="mc-l">Est. cost</div></div>
+          <div class="mc"><div class="mc-v" style="color:#1B5E20">{{deployKpis.dr}}</div><div class="mc-l">DR score</div></div>
+          <div class="mc"><div class="mc-v">{{deployKpis.target}}</div><div class="mc-l">Target date</div></div>
         </div>
         <div class="tl-steps">
           <div v-for="(st,si) in deploySteps" :key="si">
@@ -442,11 +507,11 @@ const checklist = [
     <div v-if="aiSubTab===3">
       <div class="tcol">
         <div class="card sec">
-          <h3>Varship Shipping — AI learned preferences</h3>
+          <h3>{{principalIntel.name}} — AI learned preferences</h3>
           <div v-for="p in principalIntel.prefs" :key="p.k" class="cr"><span>{{p.k}}</span><strong>{{p.v}}</strong></div>
         </div>
         <div class="card sec">
-          <h3>Placement history — Varship</h3>
+          <h3>Placement history — {{principalIntel.name}}</h3>
           <div v-for="h in principalIntel.history" :key="h.date+h.role" class="hist-row">
             <span class="hist-date">{{h.date}}</span>
             <div class="hist-info"><strong>{{h.role}}</strong><span>{{h.who}}</span></div>
@@ -460,12 +525,12 @@ const checklist = [
     <!-- Auto Checklist -->
     <div v-if="aiSubTab===4">
       <div class="card sec">
-        <h3>Deployment checklist — Juan Dela Cruz → MT Varship Glory</h3>
+        <h3>Deployment checklist — {{deployKpis.cand}} → {{deployKpis.vessel}}</h3>
         <div class="cl-kpis">
-          <div class="mc"><div class="mc-v" style="color:#1B5E20">5/9</div><div class="mc-l">Completed</div></div>
-          <div class="mc"><div class="mc-v" style="color:#E7A33E">2</div><div class="mc-l">In progress</div></div>
-          <div class="mc"><div class="mc-v">2</div><div class="mc-l">Pending</div></div>
-          <div class="mc"><div class="mc-v" style="color:#1B5E20">56%</div><div class="mc-l">Progress</div></div>
+          <div class="mc"><div class="mc-v" style="color:#1B5E20">{{checkDone}}/{{checklist.length}}</div><div class="mc-l">Completed</div></div>
+          <div class="mc"><div class="mc-v" style="color:#E7A33E">{{checkProg}}</div><div class="mc-l">In progress</div></div>
+          <div class="mc"><div class="mc-v">{{checkPend}}</div><div class="mc-l">Pending</div></div>
+          <div class="mc"><div class="mc-v" style="color:#1B5E20">{{checkPct}}%</div><div class="mc-l">Progress</div></div>
         </div>
         <div class="cl-list">
           <div v-for="cl in checklist" :key="cl.text" class="cl-item">
@@ -521,7 +586,7 @@ const checklist = [
 .cost-total-row{display:flex;justify-content:space-between;border-top:2px solid var(--color-border);margin-top:var(--space-2);padding-top:var(--space-2);font:var(--font-body)}.cost-total-row strong{font-size:18px;color:var(--color-primary)}
 .cost-compare{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cc-card{background:var(--color-surface);border-radius:var(--radius-md);padding:10px;text-align:center}.cc-best{border:1.5px solid var(--color-success)}.cc-val{font-size:20px;font-weight:600;color:var(--color-primary)}.cc-name{font:var(--font-caption);font-weight:500;margin-top:4px}.cc-route{font-size:10px;color:var(--color-text-tertiary)}
 .savings-bar{height:24px;border-radius:4px;background:var(--color-border);overflow:hidden;margin:8px 0}.savings-fill{height:100%;border-radius:4px;background:#1B5E20;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:500;color:#fff}
-.cmp-grid{display:grid;grid-template-columns:120px 1fr 1fr 1fr;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;font:var(--font-caption)}.cmp-hdr{background:var(--color-surface);padding:8px;font-weight:500;text-align:center;border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:center;gap:4px}.cmp-hdr:first-child{text-align:left;justify-content:flex-start}.cmp-label{padding:6px 8px;font-weight:500;color:var(--color-text-secondary);background:var(--color-surface);border-bottom:1px solid var(--color-border)}.cmp-cell{padding:6px 8px;border-bottom:1px solid var(--color-border);text-align:center}.cmp-best{background:#E8F5E9;color:#1B5E20;font-weight:500}.cmp-warn{background:#FFF3E0;color:#E65100}.cmp-bad{background:#FFEBEE;color:#B71C1C}
+.cmp-grid{display:grid;grid-template-columns:120px repeat(auto-fit,minmax(100px,1fr));border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;font:var(--font-caption)}.cmp-hdr{background:var(--color-surface);padding:8px;font-weight:500;text-align:center;border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:center;gap:4px}.cmp-hdr:first-child{text-align:left;justify-content:flex-start}.cmp-label{padding:6px 8px;font-weight:500;color:var(--color-text-secondary);background:var(--color-surface);border-bottom:1px solid var(--color-border)}.cmp-cell{padding:6px 8px;border-bottom:1px solid var(--color-border);text-align:center}.cmp-best{background:#E8F5E9;color:#1B5E20;font-weight:500}.cmp-warn{background:#FFF3E0;color:#E65100}.cmp-bad{background:#FFEBEE;color:#B71C1C}
 .av-sm{width:22px;height:22px;border-radius:50%;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:500}
 .tl-kpis,.cl-kpis{display:flex;gap:8px;margin-bottom:var(--space-3)}.tl-kpis .mc,.cl-kpis .mc{flex:1}
 .tl-steps{display:flex;flex-direction:column}.tl-step{display:flex;align-items:flex-start;gap:10px;padding:6px 0}.tl-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px}.tld-done{background:#1B5E20}.tld-prog{background:#E7A33E}.tld-pend{background:var(--color-border)}.tl-info{flex:1;font:var(--font-caption)}.tl-info strong{display:block;font-size:12px}.tl-info span{color:var(--color-text-tertiary);font-size:10px}.tl-day{font:var(--font-caption);font-weight:500;min-width:40px;text-align:right}.tlt-done{color:#1B5E20}.tlt-prog{color:#E7A33E}.tlt-pend{color:var(--color-text-tertiary)}.tl-line-v{width:2px;height:16px;margin-left:5px;background:var(--color-border)}
@@ -531,6 +596,3 @@ const checklist = [
 [title]{cursor:help}
 @media(max-width:1024px){.tcol{grid-template-columns:1fr}}@media(max-width:768px){.kg{grid-template-columns:repeat(2,1fr)}.g-hdr,.g-row{grid-template-columns:80px 1fr}.gantt-controls{flex-direction:column}.gc-select{min-width:100%}}
 </style>
-
-
-
