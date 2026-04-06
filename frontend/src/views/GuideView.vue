@@ -10,6 +10,7 @@ const sections = [
   { name: 'Ναυτικός', nameEn: 'Seafarer' },
   { name: 'CrewScore', nameEn: 'CrewScore' },
   { name: 'AI Εργαλεία', nameEn: 'AI Tools' },
+  { name: 'Salary', nameEn: 'Salary Benchmark' },
   { name: 'Γλωσσάριο', nameEn: 'Glossary' }
 ]
 
@@ -30,6 +31,7 @@ const glossary = [
   { term: 'Principal', desc: 'Ο πλοιοκτήτης ή η εταιρεία διαχείρισης πλοίων που χρησιμοποιεί τον manning agent. Ένας agent μπορεί να εξυπηρετεί πολλούς principals.', descEn: 'The shipowner or management company using the manning agent. An agent can serve multiple principals.' },
   { term: 'Gantt Chart', desc: 'Οπτικό χρονοδιάγραμμα με μπάρες που δείχνει ποιος ναυτικός είναι σε ποιο πλοίο, πότε λήγει, και ποιος τον αντικαθιστά.', descEn: 'Visual timeline with bars showing which seafarer is on which vessel, when contracts expire, and planned reliefs.' },
   { term: 'Crew Change', desc: 'Η αντικατάσταση πληρώματος — ένας ναυτικός αποβιβάζεται, ο αντικαταστάτης επιβιβάζεται. Κρίσιμη λειτουργία για τη συνεχή λειτουργία του πλοίου.', descEn: 'Crew replacement — one seafarer disembarks, the replacement embarks. Critical for continuous vessel operation.' },
+  { term: 'Salary Benchmark', desc: 'Εργαλείο σύγκρισης μισθών ανά βαθμό, τύπο πλοίου, εθνικότητα και εμπειρία. Δείχνει min, median, max και εξέλιξη μισθών. Χρήσιμο για ναυτικούς, πλοιοκτήτες και agents.', descEn: 'Salary comparison tool by rank, vessel type, nationality and experience. Shows min, median, max and salary trends. Useful for seafarers, shipowners and agents.' },
 ]
 </script>
 
@@ -287,8 +289,63 @@ const glossary = [
       </div>
     </div>
 
-    <!-- Section 7: Γλωσσάριο -->
+    <!-- Section 7: Salary Benchmark -->
     <div v-if="activeSection === 7" class="guide-content">
+      <div class="card guide-card highlight-card">
+        <h2>Salary Benchmark — Μισθολογικά Δεδομένα</h2>
+        <p class="lead">Σύγκριση μισθών ανά βαθμό, τύπο πλοίου, εθνικότητα και εμπειρία</p>
+      </div>
+      <div class="card guide-card">
+        <p>Το <strong>Salary Benchmark</strong> είναι εργαλείο market intelligence που δείχνει τι πληρώνει η αγορά για κάθε θέση στη ναυτιλία. Είναι διαθέσιμο σε <strong>όλους τους ρόλους</strong>.</p>
+        <div class="three-cards">
+          <div class="role-card role-seafarer">
+            <div class="role-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <h4>Ναυτικός</h4>
+            <p>Μάθε αν πληρώνεσαι σωστά. Σύγκρινε τον μισθό σου με την αγορά και διαπραγματεύσου καλύτερα.</p>
+          </div>
+          <div class="role-card role-owner">
+            <div class="role-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <h4>Πλοιοκτήτης</h4>
+            <p>Δες τις τιμές αγοράς για να κάνεις competitive offers και να κρατήσεις τους καλύτερους ναυτικούς.</p>
+          </div>
+          <div class="role-card role-agent">
+            <div class="role-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-6h6v6"/></svg>
+            </div>
+            <h4>Manning Agent</h4>
+            <p>Ξέρε τις τιμές αγοράς για κάθε βαθμό ώστε να κάνεις σωστά offers στους ναυτικούς σου.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card guide-card">
+        <h3>Τι περιλαμβάνει</h3>
+        <div class="feature-list">
+          <div class="feat"><strong>4 Φίλτρα:</strong> Βαθμός (18 ranks), Τύπος πλοίου (7), Εθνικότητα (9), Εμπειρία (4 επίπεδα)</div>
+          <div class="feat"><strong>Box Plot:</strong> Κατανομή μισθών — ελάχιστο, 25η, 50η, 75η εκατοστημόριο, μέγιστο</div>
+          <div class="feat"><strong>Bar Chart:</strong> Σύγκριση median salary ανά τύπο πλοίου (LPG/LNG πληρώνει +25%)</div>
+          <div class="feat"><strong>Trend Line:</strong> Εξέλιξη μισθών 2021-2026 με ετήσια αλλαγή (%)</div>
+          <div class="feat"><strong>Rank Table:</strong> Πλήρης πίνακας 18 βαθμών — κλικ σε οποιονδήποτε βαθμό αλλάζει όλα τα charts</div>
+          <div class="feat"><strong>Market Insights:</strong> LPG premium, nationality gap, shortage alerts, YoY growth</div>
+        </div>
+      </div>
+      <div class="card guide-card">
+        <h3>Πηγές δεδομένων</h3>
+        <div class="feature-list">
+          <div class="feat"><strong>HireHub Profiles:</strong> 24,847 εγγεγραμμένοι ναυτικοί με μισθολογικά στοιχεία</div>
+          <div class="feat"><strong>BIMCO / ICS:</strong> Seafarer Workforce Report 2024 — παγκόσμια μισθολογική έρευνα</div>
+          <div class="feat"><strong>Drewry:</strong> Manning Annual Review 2025 — ετήσια ανάλυση κόστους πληρωμάτων</div>
+          <div class="feat"><strong>Market Intelligence:</strong> Δεδομένα από 180+ principals παγκοσμίως</div>
+        </div>
+        <p style="margin-top:var(--space-4);color:var(--color-text-tertiary);font-size:13px;">Τα δεδομένα ανανεώνονται κάθε μήνα. Τα ποσά είναι ενδεικτικά και μπορεί να διαφέρουν ανάλογα με εταιρεία, σημαία, CBA, και συνθήκες αγοράς.</p>
+      </div>
+    </div>
+
+    <!-- Section 8: Γλωσσάριο -->
+    <div v-if="activeSection === 8" class="guide-content">
       <div class="card guide-card highlight-card">
         <h2>Γλωσσάριο — Glossary</h2>
         <p class="lead">Ορισμοί βασικών όρων στα Ελληνικά και Αγγλικά</p>
