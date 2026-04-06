@@ -58,7 +58,7 @@ function handleLogout() {
     <div class="navbar-inner container">
       <!-- Logo -->
       <div class="navbar-logo" @click="router.push('/')">
-        <div class="logo-mark">H</div>
+        <img src="/logo.svg" alt="HireHub" class="logo-mark" style="width:34px;height:34px;border-radius:8px;" />
         <input class="search-input" type="text" placeholder="Search" />
       </div>
 
@@ -202,3 +202,4 @@ function handleLogout() {
   .user-info { display: none; }
 }
 </style>
+
