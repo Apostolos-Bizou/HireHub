@@ -32,11 +32,10 @@ const shortlisted = ref(new Set())
 const showShortlistPicker = ref(false)
 const addingToShortlist = ref(false)
 const addSuccess = ref(false)
-const myShortlists = ref([
-  { id: "1", title: "3rd Officer — Oil/Chemical Tanker", candidateCount: 5 },
-  { id: "2", title: "Chief Engineer — Bulk Carrier", candidateCount: 3 },
-  { id: "3", title: "2nd Officer — LPG Carrier", candidateCount: 8 }
-])
+
+import { useShortlistStore } from '@/stores/shortlists'
+const shortlistStore = useShortlistStore()
+const myShortlists = computed(() => shortlistStore.shortlists)
 const selectedShortlistId = ref('')
 
 function toggleShortlist(id) {
@@ -54,8 +53,7 @@ function openShortlistPicker() {
 function addToShortlist() {
   if (!selectedShortlistId.value) return
   addingToShortlist.value = true
-  const sl = myShortlists.value.find(s => s.id === selectedShortlistId.value)
-  if (sl) sl.candidateCount += shortlisted.value.size
+  shortlistStore.addCandidatesToShortlist(selectedShortlistId.value, shortlisted.value.size)
   setTimeout(() => {
     addingToShortlist.value = false
     addSuccess.value = true

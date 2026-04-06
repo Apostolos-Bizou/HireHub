@@ -2,14 +2,11 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import { useShortlistStore } from '@/stores/shortlists'
 
 const router = useRouter()
-
-const shortlists = ref([
-  { id: "1", title: "3rd Officer — Oil/Chemical Tanker", vesselContext: "MT Pacific Voyager replacement", status: "ACTIVE", candidateCount: 5, sentToAgent: 2, avgScore: 85, created: "Apr 2, 2026", agentName: "Magsaysay Maritime" },
-  { id: "2", title: "Chief Engineer — Bulk Carrier", vesselContext: "MV Iron Pioneer crew change", status: "ACTIVE", candidateCount: 3, sentToAgent: 0, avgScore: 78, created: "Apr 3, 2026", agentName: "CF Sharp" },
-  { id: "3", title: "2nd Officer — LPG Carrier", vesselContext: "Gas Explorer rotation", status: "COMPLETED", candidateCount: 8, sentToAgent: 4, avgScore: 82, created: "Mar 20, 2026", agentName: "Bernhard Schulte" }
-])
+const store = useShortlistStore()
+const shortlists = computed(() => store.shortlists)
 
 // Modal state
 const showModal = ref(false)
@@ -58,8 +55,8 @@ async function createShortlist() {
       title: title,
       vesselContext: newVessel.value.trim() || null
     })
-    // Add to local list
-    shortlists.value.unshift({
+    // Add to store
+    store.addShortlist({
       id: data.id || String(Date.now()),
       title: title,
       vesselContext: newVessel.value.trim() || 'New shortlist',
@@ -74,7 +71,7 @@ async function createShortlist() {
     setTimeout(() => { closeModal(); saveSuccess.value = false }, 1200)
   } catch (e) {
     // If API fails, still add locally for demo
-    shortlists.value.unshift({
+    store.addShortlist({
       id: String(Date.now()),
       title: title,
       vesselContext: newVessel.value.trim() || 'New shortlist',
