@@ -2,11 +2,14 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import CrewScoreWidget from '@/components/crewscore/CrewScoreWidget.vue'
+import ReviewForm from '@/components/crewscore/ReviewForm.vue'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const profileId = route.params.id
+const showReviewModal = ref(false)
 
 /* Demo data — in production this comes from API: GET /profiles/:id/public */
 const profile = ref({
@@ -141,6 +144,23 @@ function toggleShortlist() { shortlisted.value = !shortlisted.value }
         <div class="tags-row">
           <span v-for="s in profile.skills" :key="s" class="tag tag-skill">{{ s }}</span>
         </div>
+      </div>
+
+      <!-- CrewScore -->
+      <CrewScoreWidget :showReviewButton="auth.isSeafarer" @requestReview="showReviewModal = true" />
+    </div>
+
+    <!-- Review Modal -->
+    <div v-if="showReviewModal" class="modal-overlay" @click.self="showReviewModal = false">
+      <div class="modal-content">
+        <ReviewForm
+          :seafarerName="profile.fullName"
+          verifiedVessel="MT Aegean Warrior"
+          overlapPeriod="Jan 2025 – Feb 2026"
+          :overlapMonths="14"
+          @submit="showReviewModal = false"
+          @cancel="showReviewModal = false"
+        />
       </div>
     </div>
 
@@ -349,5 +369,28 @@ function toggleShortlist() { shortlisted.value = !shortlisted.value }
   .hero-content { flex-direction: column; align-items: flex-start; padding: 0 var(--space-4); }
   .hero-stats { flex-wrap: wrap; gap: var(--space-3); }
   .hero-actions { flex-wrap: wrap; }
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.modal-content {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 </style>

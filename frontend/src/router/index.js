@@ -26,6 +26,12 @@ const routes = [
     component: () => import('@/views/TalentSearchView.vue'),
     meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
   },
+  {
+    path: '/ai-recommender',
+    name: 'AiRecommender',
+    component: () => import('@/views/AiRecommenderView.vue'),
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
+  },
   // ===== PROFILE ROUTING =====
   // Viewing a SEAFARER's public profile (Shipowner/Agent clicks on candidate)
   {

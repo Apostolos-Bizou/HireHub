@@ -11,16 +11,17 @@ const nationalities = ["Filipino","Ukrainian","Romanian","Bulgarian","Indian","G
 const hasFlag = ref(false)
 
 function scoreClass(s) { return s >= 85 ? "ai-score-high" : s >= 70 ? "ai-score-mid" : "ai-score-low" }
+function crewScoreClass(s) { return s >= 80 ? "crew-score-high" : s >= 60 ? "crew-score-mid" : "crew-score-low" }
 
 /* Demo candidates shown before first search */
 const demoCandidates = [
-  { profileId: 101, fullName: "Juan Dela Cruz", currentRank: "3rd Officer", preferredVesselType: "OIL_TANKER", yearsOfExperience: 4, nationality: "Filipino", verifiedStatus: "VERIFIED", aiScore: 92, topCertificates: ["COC","STCW","Tanker Fam."], availableFrom: "May 2026", flagEndorsements: ["Panama","Marshall Islands"] },
-  { profileId: 102, fullName: "Ruslan Goncharov", currentRank: "2nd Officer", preferredVesselType: "BULK_CARRIER", yearsOfExperience: 6, nationality: "Ukrainian", verifiedStatus: "VERIFIED", aiScore: 87, topCertificates: ["COC","STCW","ECDIS"], availableFrom: "Jun 2026", flagEndorsements: ["Liberia","Panama"] },
-  { profileId: 103, fullName: "Andrei Marinescu", currentRank: "Chief Officer", preferredVesselType: "CONTAINER", yearsOfExperience: 8, nationality: "Romanian", verifiedStatus: "VERIFIED", aiScore: 81, topCertificates: ["COC","STCW","BRM"], availableFrom: "Apr 2026", flagEndorsements: ["Malta"] },
-  { profileId: 104, fullName: "Paolo Castillo", currentRank: "3rd Engineer", preferredVesselType: "LPG_CARRIER", yearsOfExperience: 3, nationality: "Filipino", verifiedStatus: "PENDING", aiScore: 76, topCertificates: ["COC","STCW"], availableFrom: "Jul 2026", flagEndorsements: [] },
-  { profileId: 105, fullName: "Lazar Stoyanov", currentRank: "AB", preferredVesselType: "GENERAL_CARGO", yearsOfExperience: 5, nationality: "Bulgarian", verifiedStatus: "PENDING", aiScore: 68, topCertificates: ["STCW","PST"], availableFrom: "May 2026", flagEndorsements: ["Panama"] },
-  { profileId: 106, fullName: "Dmitry Petrov", currentRank: "Chief Engineer", preferredVesselType: "OIL_TANKER", yearsOfExperience: 12, nationality: "Russian", verifiedStatus: "VERIFIED", aiScore: 95, topCertificates: ["COC","STCW","ERM","IGS"], availableFrom: "Apr 2026", flagEndorsements: ["Liberia","Panama","Marshall Islands"] },
-  { profileId: 107, fullName: "Miguel Santos", currentRank: "2nd Engineer", preferredVesselType: "CHEMICAL_TANKER", yearsOfExperience: 7, nationality: "Filipino", verifiedStatus: "VERIFIED", aiScore: 89, topCertificates: ["COC","STCW","Chemical Tanker"], availableFrom: "May 2026", flagEndorsements: ["Panama","Bahamas"] }
+  { profileId: 101, fullName: "Juan Dela Cruz", currentRank: "3rd Officer", preferredVesselType: "OIL_TANKER", yearsOfExperience: 4, nationality: "Filipino", verifiedStatus: "VERIFIED", aiScore: 92, crewScore: 87, reviewCount: 14, topCertificates: ["COC","STCW","Tanker Fam."], availableFrom: "May 2026", flagEndorsements: ["Panama","Marshall Islands"] },
+  { profileId: 102, fullName: "Ruslan Goncharov", currentRank: "2nd Officer", preferredVesselType: "BULK_CARRIER", yearsOfExperience: 6, nationality: "Ukrainian", verifiedStatus: "VERIFIED", aiScore: 87, crewScore: 82, reviewCount: 11, topCertificates: ["COC","STCW","ECDIS"], availableFrom: "Jun 2026", flagEndorsements: ["Liberia","Panama"] },
+  { profileId: 103, fullName: "Andrei Marinescu", currentRank: "Chief Officer", preferredVesselType: "CONTAINER", yearsOfExperience: 8, nationality: "Romanian", verifiedStatus: "VERIFIED", aiScore: 81, crewScore: 88, reviewCount: 16, topCertificates: ["COC","STCW","BRM"], availableFrom: "Apr 2026", flagEndorsements: ["Malta"] },
+  { profileId: 104, fullName: "Paolo Castillo", currentRank: "3rd Engineer", preferredVesselType: "LPG_CARRIER", yearsOfExperience: 3, nationality: "Filipino", verifiedStatus: "PENDING", aiScore: 76, crewScore: 71, reviewCount: 5, topCertificates: ["COC","STCW"], availableFrom: "Jul 2026", flagEndorsements: [] },
+  { profileId: 105, fullName: "Lazar Stoyanov", currentRank: "AB", preferredVesselType: "GENERAL_CARGO", yearsOfExperience: 5, nationality: "Bulgarian", verifiedStatus: "PENDING", aiScore: 68, crewScore: 64, reviewCount: 3, topCertificates: ["STCW","PST"], availableFrom: "May 2026", flagEndorsements: ["Panama"] },
+  { profileId: 106, fullName: "Dmitry Petrov", currentRank: "Chief Engineer", preferredVesselType: "OIL_TANKER", yearsOfExperience: 12, nationality: "Russian", verifiedStatus: "VERIFIED", aiScore: 95, crewScore: 91, reviewCount: 22, topCertificates: ["COC","STCW","ERM","IGS"], availableFrom: "Apr 2026", flagEndorsements: ["Liberia","Panama","Marshall Islands"] },
+  { profileId: 107, fullName: "Miguel Santos", currentRank: "2nd Engineer", preferredVesselType: "CHEMICAL_TANKER", yearsOfExperience: 7, nationality: "Filipino", verifiedStatus: "VERIFIED", aiScore: 89, crewScore: 84, reviewCount: 9, topCertificates: ["COC","STCW","Chemical Tanker"], availableFrom: "May 2026", flagEndorsements: ["Panama","Bahamas"] }
 ]
 
 const candidates = computed(() => search.results?.candidates || demoCandidates)
@@ -97,6 +98,16 @@ function viewProfile(id) {
         <input type="checkbox" v-model="hasFlag" />
         <span class="checkbox-text">With flag endorsement</span>
       </label>
+      <div class="filter-group" style="margin-top:var(--space-3)">
+        <label>Min CrewScore</label>
+        <select class="select" v-model="search.filters.minCrewScore">
+          <option :value="0">Any</option>
+          <option :value="60">60+</option>
+          <option :value="70">70+</option>
+          <option :value="80">80+</option>
+          <option :value="90">90+</option>
+        </select>
+      </div>
 
       <div class="filter-divider"></div>
 
@@ -175,10 +186,17 @@ function viewProfile(id) {
 
           <!-- Actions Column -->
           <div class="candidate-actions">
-            <div class="ai-score-wrapper">
-              <div class="ai-score" :class="scoreClass(c.aiScore || 0)">{{ c.aiScore || '—' }}</div>
-              <span class="ai-score-label">AI Score</span>
+            <div class="dual-scores">
+              <div class="score-col">
+                <div class="ai-score" :class="scoreClass(c.aiScore || 0)">{{ c.aiScore || '—' }}</div>
+                <span class="score-type-label">AI</span>
+              </div>
+              <div class="score-col">
+                <div class="ai-score crew-ring" :class="crewScoreClass(c.crewScore || 0)">{{ c.crewScore || '—' }}</div>
+                <span class="score-type-label">Crew</span>
+              </div>
             </div>
+            <span v-if="c.reviewCount" class="review-count-tag">{{ c.reviewCount }} reviews</span>
             <button
               class="btn shortlist-btn"
               :class="shortlisted.has(c.profileId) ? 'btn-shortlisted' : 'btn-primary'"
@@ -440,15 +458,33 @@ function viewProfile(id) {
   gap: var(--space-2);
   flex-shrink: 0;
 }
-.ai-score-wrapper {
+.dual-scores {
+  display: flex;
+  gap: var(--space-2);
+}
+.score-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
 }
-.ai-score-label {
+.score-type-label {
   font: var(--font-caption);
   color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+.crew-ring { /* CrewScore uses green tones */ }
+.crew-score-high { border-color: var(--color-success) !important; color: var(--color-success) !important; }
+.crew-score-mid { border-color: var(--color-agent) !important; color: var(--color-agent) !important; }
+.crew-score-low { border-color: var(--color-text-tertiary) !important; color: var(--color-text-tertiary) !important; }
+.review-count-tag {
+  font: var(--font-caption);
+  color: var(--color-text-tertiary);
+  background: var(--color-surface);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 .shortlist-btn {
   font-size: 12px;
