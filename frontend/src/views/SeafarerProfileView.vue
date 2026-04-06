@@ -109,12 +109,6 @@ function submitForm() {
   modalForm.value = {}
 }
 
-function shareDocs() {
-  const docList = [...selectedDocs.value].join('%0D%0A- '); const subject = encodeURIComponent('HireHub - Shared Documents: ' + profile.value.fullName); const body = encodeURIComponent('Dear Principal,\n\n' + profile.value.fullName + ' is sharing the following documents with you via HireHub:\n\n- ') + docList + encodeURIComponent('\n\nPlease log in to HireHub to review and download.\n\nBest regards,\n' + profile.value.fullName); window.location.href = 'mailto:?subject=' + subject + '&body=' + body; //\n\nDocuments:\n' + [...selectedDocs.value].join('\n'))
-  shareMode.value = false
-  selectedDocs.value.clear()
-}
-
 const profile = ref({
   fullName: auth.user?.fullName || "Simos Varias",
   currentRank: "Chief Officer", nationality: "Greek",
