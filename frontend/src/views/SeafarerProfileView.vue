@@ -8,6 +8,30 @@ const auth = useAuthStore()
 const photoMap = { 'simos.varias@email.com': '/profiles/simos-varias.jpg' }
 const userPhoto = computed(() => photoMap[auth.user?.email] || null)
 const activeTab = ref('overview')
+const shareMode = ref(false)
+const selectedDocs = ref(new Set())
+
+function toggleShareMode() {
+  shareMode.value = !shareMode.value
+  if (!shareMode.value) selectedDocs.value.clear()
+}
+
+function toggleDoc(docName) {
+  if (selectedDocs.value.has(docName)) selectedDocs.value.delete(docName)
+  else selectedDocs.value.add(docName)
+}
+
+function selectAll() {
+  profile.value.documents.forEach(cat => cat.items.forEach(doc => selectedDocs.value.add(doc.name)))
+}
+
+function selectNone() { selectedDocs.value.clear() }
+
+function shareDocs() {
+  alert('Sharing ' + selectedDocs.value.size + ' documents with principal...\n\nDocuments:\n' + [...selectedDocs.value].join('\n'))
+  shareMode.value = false
+  selectedDocs.value.clear()
+}
 
 const profile = ref({
   fullName: auth.user?.fullName || "Simos Varias",
@@ -243,7 +267,16 @@ const profile = ref({
               <h2>Document Vault</h2>
               <p class="section-sub">{{ profile.documents.reduce((a,c) => a + c.items.length, 0) }} documents | {{ profile.documents.reduce((a,c) => a + c.items.filter(i=>i.shared).length, 0) }} shared with principals | {{ profile.documents.reduce((a,c) => a + c.items.filter(i=>i.status==='EXPIRING').length, 0) }} expiring soon</p>
             </div>
-            <button class="btn btn-primary" style="font-size:12px;padding:8px 16px">Share All with Principal</button>
+            <div class="docs-actions">
+              <template v-if="shareMode">
+                <span class="share-count">{{ selectedDocs.size }} selected</span>
+                <button class="btn-link" @click="selectAll">Select All</button>
+                <button class="btn-link" @click="selectNone">Clear</button>
+                <button class="btn btn-primary btn-sm" @click="shareDocs" :disabled="selectedDocs.size === 0">Share Selected</button>
+                <button class="btn btn-tertiary btn-sm" @click="toggleShareMode">Cancel</button>
+              </template>
+              <button v-else class="btn btn-primary btn-sm" @click="toggleShareMode">Share with Principal</button>
+            </div>
           </div>
         </div>
         <div v-for="cat in profile.documents" :key="cat.category" class="card section">
@@ -254,20 +287,22 @@ const profile = ref({
           </h2>
           <div class="doc-table">
             <div class="doc-table-head">
+              <span v-if="shareMode" class="doc-col-check"></span>
               <span class="doc-col-name">Document</span>
               <span class="doc-col-num">Number</span>
               <span class="doc-col-date">Issued</span>
               <span class="doc-col-date">Expires</span>
               <span class="doc-col-status">Status</span>
-              <span class="doc-col-share">Shared</span>
+              <span v-if="!shareMode" class="doc-col-share">Shared</span>
             </div>
-            <div v-for="doc in cat.items" :key="doc.name" class="doc-row" :class="{'doc-expiring': doc.status === 'EXPIRING'}">
+            <div v-for="doc in cat.items" :key="doc.name" class="doc-row" :class="{'doc-expiring': doc.status === 'EXPIRING', 'doc-selected': selectedDocs.has(doc.name)}" @click="shareMode ? toggleDoc(doc.name) : null" :style="shareMode ? 'cursor:pointer' : ''">
+              <span v-if="shareMode" class="doc-col-check"><input type="checkbox" :checked="selectedDocs.has(doc.name)" @click.stop="toggleDoc(doc.name)" class="doc-checkbox" /></span>
               <span class="doc-col-name"><strong>{{ doc.name }}</strong></span>
               <span class="doc-col-num doc-mono">{{ doc.number }}</span>
               <span class="doc-col-date">{{ doc.issued }}</span>
               <span class="doc-col-date">{{ doc.expires }}</span>
               <span class="doc-col-status"><span class="badge" :class="doc.status==='VALID'?'badge-verified':'badge-warning'">{{ doc.status }}</span></span>
-              <span class="doc-col-share"><span v-if="doc.shared" class="doc-shared">&#10003;</span><span v-else class="doc-private">&#128274;</span></span>
+              <span v-if="!shareMode" class="doc-col-share"><span v-if="doc.shared" class="doc-shared">&#10003;</span><span v-else class="doc-private">&#128274;</span></span>
             </div>
           </div>
         </div>
@@ -353,14 +388,24 @@ const profile = ref({
 .doc-cat-icon{font-size:20px}
 .doc-count{background:var(--color-surface);color:var(--color-text-secondary);font-size:11px;padding:2px 8px;border-radius:10px;font-weight:400}
 .doc-table{margin-top:12px}
-.doc-table-head{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.7fr 0.5fr;gap:8px;padding:8px 0;border-bottom:2px solid var(--color-border);font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
-.doc-row{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.7fr 0.5fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--color-border);align-items:center;font-size:12px}
+.doc-table-head,.doc-row{grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.7fr 0.5fr}
 .doc-row:last-child{border-bottom:none}
 .doc-row strong{font-size:12px;font-weight:500}
+.doc-row:hover{background:rgba(0,0,0,0.02)}
 .doc-col-name{overflow:hidden;text-overflow:ellipsis}
 .doc-col-num,.doc-col-date{color:var(--color-text-secondary);font-size:11px}
 .doc-mono{font-family:monospace;font-size:10px}
 .doc-expiring{background:rgba(230,81,0,0.04);border-radius:4px;padding-left:4px;padding-right:4px}
 .doc-shared{color:#1B5E20;font-weight:bold}
 .doc-private{font-size:10px;color:var(--color-text-tertiary)}
+.docs-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-sm{font-size:12px;padding:8px 16px}
+.btn-link{background:none;border:none;color:var(--color-primary);font-size:12px;cursor:pointer;padding:4px 8px;font-weight:500}
+.btn-link:hover{text-decoration:underline}
+.share-count{font-size:12px;font-weight:600;color:var(--color-primary);padding:4px 8px;background:#E6F1FB;border-radius:12px}
+.doc-col-check{width:32px;display:flex;align-items:center;justify-content:center}
+.doc-checkbox{width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)}
+.doc-selected{background:rgba(10,102,194,0.06);border-radius:4px}
+.doc-table-head{display:grid;gap:8px;padding:8px 0;border-bottom:2px solid var(--color-border);font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
+.doc-row{display:grid;gap:8px;padding:10px 0;border-bottom:1px solid var(--color-border);align-items:center;font-size:12px;transition:background 0.15s}
 </style>
