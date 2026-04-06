@@ -59,6 +59,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/salary',
+    name: 'SalaryBenchmark',
+    component: () => import('@/views/SalaryBenchmarkView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/guide',
     name: 'Guide',
     component: () => import('@/views/GuideView.vue'),
