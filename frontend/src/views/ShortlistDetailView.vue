@@ -73,6 +73,41 @@ function toggleAll() {
       </div>
     </div>
 
+    <!-- Agent Integration Panel -->
+    <div class="card agent-panel">
+      <div class="agent-panel-header">
+        <div class="agent-panel-info">
+          <div class="avatar avatar-md avatar-agent">MA</div>
+          <div>
+            <h3>Magsaysay Maritime Corp.</h3>
+            <div class="agent-panel-meta">
+              <span class="badge badge-agent">DMW-1234-2026</span>
+              <span>Manila, Philippines</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-tertiary btn-sm">Change agent</button>
+      </div>
+      <div class="agent-metrics">
+        <div class="metric-card">
+          <div class="value">{{ candidates.length }}</div>
+          <div class="label">Total candidates</div>
+        </div>
+        <div class="metric-card">
+          <div class="value">{{ candidates.filter(c => c.status === 'SENT_TO_AGENT').length }}</div>
+          <div class="label">Sent to agent</div>
+        </div>
+        <div class="metric-card">
+          <div class="value">{{ candidates.filter(c => c.status === 'UNDER_REVIEW').length }}</div>
+          <div class="label">Under review</div>
+        </div>
+        <div class="metric-card">
+          <div class="value">{{ avgScore }}</div>
+          <div class="label">Avg AI score</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Pipeline Tabs -->
     <div class="card pipeline-card">
       <div class="pipeline-tabs">
@@ -120,7 +155,7 @@ function toggleAll() {
           <div class="ai-score" :class="scoreClass(c.aiScore)">{{ c.aiScore }}</div>
           <span class="badge" :class="statusBadge(c.status)">{{ statusLabel(c.status) }}</span>
           <div class="row-actions">
-            <button class="btn-icon" title="View profile" @click="router.push(`/seafarer/${c.id}`)">
+            <button class="btn-icon" title="View profile" @click="router.push(`/profile/${c.id}`)">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
             <button class="btn-icon" title="Message">
@@ -130,41 +165,6 @@ function toggleAll() {
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Agent Integration Panel -->
-    <div class="card agent-panel">
-      <div class="agent-panel-header">
-        <div class="agent-panel-info">
-          <div class="avatar avatar-md avatar-agent">MA</div>
-          <div>
-            <h3>Magsaysay Maritime Corp.</h3>
-            <div class="agent-panel-meta">
-              <span class="badge badge-agent">DMW-1234-2026</span>
-              <span>Manila, Philippines</span>
-            </div>
-          </div>
-        </div>
-        <button class="btn btn-tertiary btn-sm">Change agent</button>
-      </div>
-      <div class="agent-metrics">
-        <div class="metric-card">
-          <div class="value">{{ candidates.length }}</div>
-          <div class="label">Total candidates</div>
-        </div>
-        <div class="metric-card">
-          <div class="value">{{ candidates.filter(c => c.status === 'SENT_TO_AGENT').length }}</div>
-          <div class="label">Sent to agent</div>
-        </div>
-        <div class="metric-card">
-          <div class="value">{{ candidates.filter(c => c.status === 'UNDER_REVIEW').length }}</div>
-          <div class="label">Under review</div>
-        </div>
-        <div class="metric-card">
-          <div class="value">{{ avgScore }}</div>
-          <div class="label">Avg AI score</div>
         </div>
       </div>
     </div>
