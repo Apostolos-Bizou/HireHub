@@ -242,7 +242,7 @@ export default {
 }
 .dash-main { min-width: 0; }
 
-.section { padding: var(--space-4); margin-bottom: var(--space-3); }
+.section { padding: var(--space-4); margin-bottom: var(--space-3); box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04); }
 .section h2 {
   font: var(--font-h2);
   margin-bottom: var(--space-3);
@@ -334,3 +334,4 @@ export default {
   .dash-header { flex-direction: column; gap: var(--space-3); align-items: flex-start; }
 }
 </style>
+
