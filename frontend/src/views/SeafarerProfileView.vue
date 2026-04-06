@@ -66,7 +66,52 @@ const profile = ref({
     { name: "Capt. Nikolaos Dimitriou", title: "Master, Diana Shipping", relation: "Served as C/O under his command", available: true },
     { name: "Eng. Alexandros Mavros", title: "Tech Supt, Capital Ship Mgmt", relation: "Dry-docking collaboration", available: false }
   ],
-  interests: ["Maritime Safety", "Decarbonization", "Crew Welfare", "ECDIS Technology", "Autonomous Vessels", "Greek Maritime History"]
+  interests: ["Maritime Safety", "Decarbonization", "Crew Welfare", "ECDIS Technology", "Autonomous Vessels", "Greek Maritime History"],
+  documents: [
+    { category: "Identity & Travel", items: [
+      { name: "Passport", number: "AK 2847561", issued: "2022-03-10", expires: "2032-03-09", status: "VALID", shared: true },
+      { name: "Seaman's Book (Continuous Discharge Certificate)", number: "CDC-2014-08421", issued: "2014-09-01", expires: "2029-09-01", status: "VALID", shared: true },
+      { name: "National ID Card", number: "AI 284756", issued: "2020-01-15", expires: "2030-01-15", status: "VALID", shared: false },
+      { name: "Visa - USA (C1/D Crewman)", number: "US-C1D-2024", issued: "2024-02-20", expires: "2029-02-20", status: "VALID", shared: true },
+      { name: "Visa - Schengen (Multiple Entry)", number: "SCH-2023-GR", issued: "2023-06-01", expires: "2028-06-01", status: "VALID", shared: false }
+    ]},
+    { category: "Medical & PEME", items: [
+      { name: "PEME (Pre-Employment Medical Exam)", number: "PEME-2026-0412", issued: "2026-02-15", expires: "2028-02-15", status: "VALID", shared: true },
+      { name: "Medical Fitness Certificate", number: "MFC-2026-GR", issued: "2026-02-15", expires: "2028-02-15", status: "VALID", shared: true },
+      { name: "Drug & Alcohol Test", number: "DAT-2026-0215", issued: "2026-02-15", expires: "2026-08-15", status: "EXPIRING", shared: true },
+      { name: "Yellow Fever Vaccination", number: "YFV-2023", issued: "2023-04-10", expires: "Life", status: "VALID", shared: true },
+      { name: "COVID-19 Vaccination Record", number: "VAX-GR-2021", issued: "2021-06-20", expires: "N/A", status: "VALID", shared: true },
+      { name: "Eyesight & Color Vision Test", number: "EYE-2026-02", issued: "2026-02-15", expires: "2028-02-15", status: "VALID", shared: false },
+      { name: "Chest X-Ray Report", number: "XR-2026-02", issued: "2026-02-15", expires: "2028-02-15", status: "VALID", shared: false },
+      { name: "Blood Test (CBC, Hepatitis, HIV)", number: "BT-2026-02", issued: "2026-02-15", expires: "2028-02-15", status: "VALID", shared: false }
+    ]},
+    { category: "Competency & STCW Certificates", items: [
+      { name: "COC - Chief Officer (Deck)", number: "COC-GR-2020-4821", issued: "2020-12-15", expires: "2030-12-31", status: "VALID", shared: true },
+      { name: "STCW Full Package (Manila Amendments)", number: "STCW-GR-2023", issued: "2023-06-15", expires: "2028-06-15", status: "VALID", shared: true },
+      { name: "Advanced Tanker Cargo Operations", number: "ATCO-2022", issued: "2022-11-30", expires: "2027-11-30", status: "VALID", shared: true },
+      { name: "ECDIS Type-Specific (JRC/Furuno)", number: "ECDIS-2023", issued: "2023-03-15", expires: "2028-03-15", status: "VALID", shared: true },
+      { name: "Ship Security Officer (SSO)", number: "SSO-2024", issued: "2024-04-30", expires: "2029-04-30", status: "VALID", shared: true },
+      { name: "Bridge Resource Management (BRM)", number: "BRM-2022", issued: "2022-08-20", expires: "2027-08-20", status: "VALID", shared: true },
+      { name: "Medical First Aid (MFA P2)", number: "MFA-2021", issued: "2021-09-01", expires: "2026-09-01", status: "EXPIRING", shared: true },
+      { name: "Proficiency in Survival Craft (PSC)", number: "PSC-2023", issued: "2023-06-15", expires: "2028-06-15", status: "VALID", shared: true },
+      { name: "Advanced Fire Fighting (AFF)", number: "AFF-2023", issued: "2023-06-15", expires: "2028-06-15", status: "VALID", shared: true }
+    ]},
+    { category: "Flag State Endorsements", items: [
+      { name: "Panama Flag Endorsement", number: "PAN-2022-8842", issued: "2022-12-31", expires: "2027-12-31", status: "VALID", shared: true },
+      { name: "Marshall Islands Flag Endorsement", number: "MHL-2023-1204", issued: "2023-06-30", expires: "2028-06-30", status: "VALID", shared: true },
+      { name: "Liberia Flag Endorsement", number: "LBR-2022-7721", issued: "2022-09-15", expires: "2027-09-15", status: "VALID", shared: true },
+      { name: "Malta Flag Endorsement", number: "MLT-2023-0331", issued: "2023-03-31", expires: "2028-03-31", status: "VALID", shared: true },
+      { name: "Bahamas Flag Endorsement", number: "BHS-2022-1102", issued: "2022-11-02", expires: "2027-11-02", status: "VALID", shared: true }
+    ]},
+    { category: "Contract & Employment", items: [
+      { name: "Letter of Recommendation - Tsakos Energy", number: "LOR-TSK-2026", issued: "2026-03-01", expires: "N/A", status: "VALID", shared: true },
+      { name: "Letter of Recommendation - Diana Shipping", number: "LOR-DIA-2025", issued: "2025-01-10", expires: "N/A", status: "VALID", shared: true },
+      { name: "Certificate of Sea Service (Consolidated)", number: "CSS-2026", issued: "2026-03-15", expires: "N/A", status: "VALID", shared: true },
+      { name: "Insurance Certificate (P&I Club)", number: "PI-2026-GR", issued: "2026-01-01", expires: "2027-01-01", status: "VALID", shared: false },
+      { name: "Bank Details & Allotment Form", number: "BANK-GR-2026", issued: "2026-01-15", expires: "N/A", status: "VALID", shared: false },
+      { name: "Next of Kin Declaration", number: "NOK-2026", issued: "2026-01-15", expires: "N/A", status: "VALID", shared: false }
+    ]}
+  ]
 })
 </script>
 
@@ -102,6 +147,7 @@ const profile = ref({
         <button :class="{ active: activeTab === 'service' }" @click="activeTab = 'service'">Sea Service ({{ profile.seaServiceRecords.length }})</button>
         <button :class="{ active: activeTab === 'certs' }" @click="activeTab = 'certs'">Certificates ({{ profile.certificates.length }})</button>
         <button :class="{ active: activeTab === 'skills' }" @click="activeTab = 'skills'">Skills & Awards</button>
+        <button :class="{ active: activeTab === 'docs' }" @click="activeTab = 'docs'">Documents ({{ profile.documents.reduce((a,c) => a + c.items.length, 0) }})</button>
       </div>
 
       <template v-if="activeTab === 'overview'">
@@ -189,6 +235,43 @@ const profile = ref({
           <div class="skills-grid"><span v-for="i in profile.interests" :key="i" class="badge badge-info">{{ i }}</span></div>
         </div>
       </template>
+
+      <template v-if="activeTab === 'docs'">
+        <div class="card section docs-header">
+          <div class="docs-header-row">
+            <div>
+              <h2>Document Vault</h2>
+              <p class="section-sub">{{ profile.documents.reduce((a,c) => a + c.items.length, 0) }} documents | {{ profile.documents.reduce((a,c) => a + c.items.filter(i=>i.shared).length, 0) }} shared with principals | {{ profile.documents.reduce((a,c) => a + c.items.filter(i=>i.status==='EXPIRING').length, 0) }} expiring soon</p>
+            </div>
+            <button class="btn btn-primary" style="font-size:12px;padding:8px 16px">Share All with Principal</button>
+          </div>
+        </div>
+        <div v-for="cat in profile.documents" :key="cat.category" class="card section">
+          <h2 class="doc-cat-title">
+            <span class="doc-cat-icon">{{ cat.category.includes('Identity') ? '&#128274;' : cat.category.includes('Medical') ? '&#129658;' : cat.category.includes('Competency') ? '&#127891;' : cat.category.includes('Flag') ? '&#127988;' : '&#128196;' }}</span>
+            {{ cat.category }}
+            <span class="doc-count">{{ cat.items.length }}</span>
+          </h2>
+          <div class="doc-table">
+            <div class="doc-table-head">
+              <span class="doc-col-name">Document</span>
+              <span class="doc-col-num">Number</span>
+              <span class="doc-col-date">Issued</span>
+              <span class="doc-col-date">Expires</span>
+              <span class="doc-col-status">Status</span>
+              <span class="doc-col-share">Shared</span>
+            </div>
+            <div v-for="doc in cat.items" :key="doc.name" class="doc-row" :class="{'doc-expiring': doc.status === 'EXPIRING'}">
+              <span class="doc-col-name"><strong>{{ doc.name }}</strong></span>
+              <span class="doc-col-num doc-mono">{{ doc.number }}</span>
+              <span class="doc-col-date">{{ doc.issued }}</span>
+              <span class="doc-col-date">{{ doc.expires }}</span>
+              <span class="doc-col-status"><span class="badge" :class="doc.status==='VALID'?'badge-verified':'badge-warning'">{{ doc.status }}</span></span>
+              <span class="doc-col-share"><span v-if="doc.shared" class="doc-shared">&#10003;</span><span v-else class="doc-private">&#128274;</span></span>
+            </div>
+          </div>
+        </div>
+      </template>
     </main>
 
     <aside class="profile-sidebar">
@@ -210,14 +293,14 @@ const profile = ref({
 <style scoped>
 .profile-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;padding-top:16px;padding-bottom:48px}
 .hero-card{overflow:hidden}.hero-banner{height:120px;background:linear-gradient(135deg,#004182 0%,#0A66C2 40%,#1a7fd4 70%,#004182 100%)}
-.hero-body{padding:16px 20px;display:flex;gap:16px;align-items:flex-start;flex-wrap:nowrap}
+.hero-body{padding:16px 20px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
 .hero-avatar{margin-top:-40px;border:3px solid #fff}
 .hero-avatar-img{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid white;margin-top:-40px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.hero-info{flex:1;min-width:0}.hero-info h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hero-info{flex:1;min-width:200px}.hero-info h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .hero-headline{font-size:14px;color:var(--color-text-secondary);margin-top:4px}
-.hero-bio{font-size:12px;max-width:100%;color:var(--color-text-secondary);margin-top:8px;line-height:1.5}
+.hero-bio{font-size:13px;color:var(--color-text-secondary);margin-top:8px;line-height:1.5}
 .hero-stats{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--color-text-secondary);flex-wrap:wrap}
-.hero-actions{display:flex;gap:8px;flex-wrap:nowrap;align-self:flex-start;margin-top:8px;flex-shrink:0}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap;align-self:flex-start;margin-top:8px}
 .tabs-bar{display:flex;background:white;border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden}
 .tabs-bar button{flex:1;padding:12px 16px;border:none;background:none;font-size:13px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
 .tabs-bar button:hover{background:var(--color-surface)}.tabs-bar button.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:rgba(10,102,194,.04)}
@@ -265,5 +348,19 @@ const profile = ref({
 .prog{height:8px;background:var(--color-surface);border-radius:4px;overflow:hidden}
 .prog-fill{height:100%;background:var(--color-primary);border-radius:4px}
 @media(max-width:768px){.profile-layout{grid-template-columns:1fr}}
+.docs-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.doc-cat-title{display:flex;align-items:center;gap:8px}
+.doc-cat-icon{font-size:20px}
+.doc-count{background:var(--color-surface);color:var(--color-text-secondary);font-size:11px;padding:2px 8px;border-radius:10px;font-weight:400}
+.doc-table{margin-top:12px}
+.doc-table-head{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.7fr 0.5fr;gap:8px;padding:8px 0;border-bottom:2px solid var(--color-border);font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
+.doc-row{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.7fr 0.5fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--color-border);align-items:center;font-size:12px}
+.doc-row:last-child{border-bottom:none}
+.doc-row strong{font-size:12px;font-weight:500}
+.doc-col-name{overflow:hidden;text-overflow:ellipsis}
+.doc-col-num,.doc-col-date{color:var(--color-text-secondary);font-size:11px}
+.doc-mono{font-family:monospace;font-size:10px}
+.doc-expiring{background:rgba(230,81,0,0.04);border-radius:4px;padding-left:4px;padding-right:4px}
+.doc-shared{color:#1B5E20;font-weight:bold}
+.doc-private{font-size:10px;color:var(--color-text-tertiary)}
 </style>
-
