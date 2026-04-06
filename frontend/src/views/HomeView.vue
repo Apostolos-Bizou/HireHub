@@ -52,8 +52,9 @@ const openings = [
         <h3>{{ auth.user?.fullName }}</h3>
         <p class="role-label">{{ auth.user?.role?.replace('_', ' ') }}</p>
         <div class="mini-stats">
-          <div><strong>12</strong><span>Vessels</span></div>
-          <div><strong>240</strong><span>Crew</span></div>
+          <div><strong>4 yrs</strong><span>Sea Service</span></div>
+          <div><strong>347</strong><span>Profile Views</span></div>
+          <div><strong>12</strong><span>Shortlists</span></div>
         </div>
       </div>
       <nav class="sidebar-nav card">
@@ -181,3 +182,4 @@ const openings = [
 
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
+
