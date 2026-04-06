@@ -33,7 +33,7 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public ResponseEntity<Map<String, Long>> getUnreadCount(
             @AuthenticationPrincipal UserPrincipal principal) {
-        long count = notificationRepo.countByUserIdAndIsReadFalse(principal.getId());
+        long count = notificationRepo.countByUserIdAndReadFalse(principal.getId());
         return ResponseEntity.ok(Map.of("unreadCount", count));
     }
 
