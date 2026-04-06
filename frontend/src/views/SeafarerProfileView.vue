@@ -10,6 +10,7 @@ const userPhoto = computed(() => photoMap[auth.user?.email] || null)
 const activeTab = ref('overview')
 const shareMode = ref(false)
 const selectedDocs = ref(new Set())
+const selectedCount = computed(() => selectedDocs.value.size)
 
 function toggleShareMode() {
   shareMode.value = !shareMode.value
@@ -354,10 +355,10 @@ const profile = ref({
             </div>
             <div class="docs-actions">
               <template v-if="shareMode">
-                <span class="share-count">{{ selectedDocs.size }} selected</span>
+                <span class="share-count">{{ selectedCount }} selected</span>
                 <button class="btn-link" @click="selectAll">Select All</button>
                 <button class="btn-link" @click="selectNone">Clear</button>
-                <button class="btn btn-primary btn-sm" @click="shareDocs" :disabled="selectedDocs.size === 0">Share Selected</button>
+                <button class="btn btn-primary btn-sm" @click="shareDocs" :disabled="selectedDocs.size < 1">Share Selected</button>
                 <button class="btn btn-tertiary btn-sm" @click="toggleShareMode">Cancel</button>
               </template>
 <button class="btn-upload" @click="handleUpload('Document')">+ Upload</button>
@@ -548,5 +549,6 @@ const profile = ref({
 .doc-table-head{display:grid;gap:8px;padding:8px 0;border-bottom:2px solid var(--color-border);font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
 .doc-row{display:grid;gap:8px;padding:10px 0;border-bottom:1px solid var(--color-border);align-items:center;font-size:12px;transition:background 0.15s}
 </style>
+
 
 
