@@ -210,14 +210,14 @@ const profile = ref({
 <style scoped>
 .profile-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;padding-top:16px;padding-bottom:48px}
 .hero-card{overflow:hidden}.hero-banner{height:120px;background:linear-gradient(135deg,#004182 0%,#0A66C2 40%,#1a7fd4 70%,#004182 100%)}
-.hero-body{padding:16px 20px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.hero-body{padding:16px 20px;display:flex;gap:16px;align-items:flex-start;flex-wrap:nowrap}
 .hero-avatar{margin-top:-40px;border:3px solid #fff}
 .hero-avatar-img{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid white;margin-top:-40px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.hero-info{flex:1;min-width:200px}.hero-info h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hero-info{flex:1;min-width:0}.hero-info h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .hero-headline{font-size:14px;color:var(--color-text-secondary);margin-top:4px}
-.hero-bio{font-size:13px;color:var(--color-text-secondary);margin-top:8px;line-height:1.5}
+.hero-bio{font-size:12px;max-width:100%;color:var(--color-text-secondary);margin-top:8px;line-height:1.5}
 .hero-stats{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--color-text-secondary);flex-wrap:wrap}
-.hero-actions{display:flex;gap:8px;flex-wrap:wrap;align-self:flex-start;margin-top:8px}
+.hero-actions{display:flex;gap:8px;flex-wrap:nowrap;align-self:flex-start;margin-top:8px;flex-shrink:0}
 .tabs-bar{display:flex;background:white;border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden}
 .tabs-bar button{flex:1;padding:12px 16px;border:none;background:none;font-size:13px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
 .tabs-bar button:hover{background:var(--color-surface)}.tabs-bar button.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:rgba(10,102,194,.04)}
@@ -266,3 +266,4 @@ const profile = ref({
 .prog-fill{height:100%;background:var(--color-primary);border-radius:4px}
 @media(max-width:768px){.profile-layout{grid-template-columns:1fr}}
 </style>
+
