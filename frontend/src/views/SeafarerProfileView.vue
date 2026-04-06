@@ -358,7 +358,7 @@ const profile = ref({
                 <button class="btn btn-tertiary btn-sm" @click="toggleShareMode">Cancel</button>
               </template>
 <button class="btn-upload" @click="handleUpload('Document')">+ Upload</button>
-              <button v-else class="btn btn-primary btn-sm" @click="toggleShareMode">Share with Principal</button>
+              <button class="btn btn-primary btn-sm" @click="toggleShareMode">Share with Principal</button>
             </div>
           </div>
         </div>
