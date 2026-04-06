@@ -48,7 +48,8 @@ const openings = [
     <aside class="feed-sidebar-left">
       <div class="card profile-mini">
         <div class="profile-banner"></div>
-        <div class="avatar avatar-lg avatar-owner" style="margin:-28px auto 0">
+        <img v-if="userPhoto" :src="userPhoto" class="avatar avatar-lg" style="margin:-28px auto 0; width:56px; height:56px; border-radius:50%%; object-fit:cover; border:3px solid white;" />
+        <div v-else class="avatar avatar-lg avatar-owner" style="margin:-28px auto 0">
           {{ initials(auth.user?.fullName) }}
         </div>
         <h3>{{ auth.user?.fullName }}</h3>
@@ -184,6 +185,7 @@ const openings = [
 
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
+
 
 
 
