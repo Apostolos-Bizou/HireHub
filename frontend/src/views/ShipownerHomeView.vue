@@ -80,6 +80,40 @@ const auth = useAuthStore()
           <CrewAvailabilityTimeline />
         </div>
 
+        <!-- Crew Availability & Nationalities Panels -->
+        <div class="panels-row">
+          <div class="card section">
+            <h2>Crew availability by rank</h2>
+            <div class="avail-list">
+              <div class="avail-row"><span class="avail-rank">Master</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:28%"></div></div><span class="avail-count">340</span></div>
+              <div class="avail-row"><span class="avail-rank">Chief Officer</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:42%"></div></div><span class="avail-count">512</span></div>
+              <div class="avail-row"><span class="avail-rank">2nd Officer</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:55%"></div></div><span class="avail-count">670</span></div>
+              <div class="avail-row"><span class="avail-rank">3rd Officer</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:70%"></div></div><span class="avail-count">852</span></div>
+              <div class="avail-row"><span class="avail-rank">Chief Engineer</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:22%"></div></div><span class="avail-count">268</span></div>
+              <div class="avail-row"><span class="avail-rank">2nd Engineer</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:38%"></div></div><span class="avail-count">462</span></div>
+              <div class="avail-row"><span class="avail-rank">3rd Engineer</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:48%"></div></div><span class="avail-count">584</span></div>
+              <div class="avail-row"><span class="avail-rank">Bosun</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:35%"></div></div><span class="avail-count">428</span></div>
+              <div class="avail-row"><span class="avail-rank">AB</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:85%"></div></div><span class="avail-count">1,036</span></div>
+              <div class="avail-row"><span class="avail-rank">Oiler</span><div class="avail-bar-wrap"><div class="avail-bar" style="width:60%"></div></div><span class="avail-count">732</span></div>
+            </div>
+          </div>
+          <div class="card section">
+            <h2>Top nationalities</h2>
+            <div class="nat-list">
+              <div class="nat-row2"><span class="nat-name2">Filipino</span><span class="nat-count2">14,908</span><span class="nat-pct2">60%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Ukrainian</span><span class="nat-count2">2,732</span><span class="nat-pct2">11%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Indian</span><span class="nat-count2">1,988</span><span class="nat-pct2">8%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Romanian</span><span class="nat-count2">1,242</span><span class="nat-pct2">5%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Russian</span><span class="nat-count2">994</span><span class="nat-pct2">4%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Greek</span><span class="nat-count2">746</span><span class="nat-pct2">3%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Bulgarian</span><span class="nat-count2">497</span><span class="nat-pct2">2%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Indonesian</span><span class="nat-count2">373</span><span class="nat-pct2">1.5%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Chinese</span><span class="nat-count2">249</span><span class="nat-pct2">1%</span></div>
+              <div class="nat-row2"><span class="nat-name2">Other</span><span class="nat-count2">1,118</span><span class="nat-pct2">4.5%</span></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Charts Row -->
         <div class="charts-row">
           <div class="card section chart-card">
@@ -323,6 +357,21 @@ export default {
   text-decoration: none;
 }
 
+.panels-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3); }
+.avail-list { display: flex; flex-direction: column; }
+.avail-row { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border); font: var(--font-small); }
+.avail-row:last-child { border-bottom: none; }
+.avail-rank { flex: 1; font-weight: 500; }
+.avail-bar-wrap { width: 100px; height: 6px; background: var(--color-border); border-radius: 3px; overflow: hidden; margin: 0 12px; }
+.avail-bar { height: 100%; border-radius: 3px; background: var(--color-primary); }
+.avail-count { font-weight: 600; color: var(--color-primary); min-width: 40px; text-align: right; }
+.nat-list { display: flex; flex-direction: column; }
+.nat-row2 { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border); font: var(--font-small); }
+.nat-row2:last-child { border-bottom: none; }
+.nat-name2 { flex: 1; }
+.nat-count2 { font-weight: 600; color: var(--color-primary); min-width: 50px; text-align: right; margin-right: 8px; }
+.nat-pct2 { color: var(--color-text-tertiary); min-width: 36px; text-align: right; }
+
 @media (max-width: 1024px) {
   .dash-layout { grid-template-columns: 1fr; }
   .charts-row { grid-template-columns: 1fr; }
@@ -332,5 +381,7 @@ export default {
   .dash-header { flex-direction: column; gap: var(--space-3); align-items: flex-start; }
 }
 </style>
+
+
 
 
