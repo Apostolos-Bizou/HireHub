@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 const activeTab = ref(0)
-const tabs = ['Crew calendar', 'AI intelligence', 'Principal matching', 'Shortlist analyzer', 'Deployment readiness', 'Compliance']
+const tabs = ['Shortlist analyzer', 'Deployment readiness', 'Principal matching', 'Crew calendar', 'AI intelligence', 'Compliance']
 const expandedCandidate = ref(null)
 const selPrincipal = ref(0)
 const selVessel = ref(0)
@@ -127,17 +127,21 @@ function barStyle(b) {
 function daysClass(d){return d<=30?'days-u':d<=60?'days-w':'days-ok'}
 
 const aiSubTab = ref(0)
-const aiSubTabs = ['Cost optimizer', 'Compare candidates', 'Deploy timeline', 'Principal intel', 'Auto-checklist']
-const costSliders = ref([
-  {label:'Medical (PEME)',val:350,min:200,max:600},
-  {label:'Travel',val:890,min:400,max:2000},
-  {label:'Flag endorsement',val:160,min:50,max:500},
-  {label:'Visa processing',val:200,min:50,max:400},
-  {label:'DMW/OEC',val:150,min:100,max:300},
-  {label:'Insurance',val:250,min:100,max:500},
-  {label:'Agency fee',val:400,min:200,max:800}
-])
-const totalCost = computed(() => costSliders.value.reduce((s,c) => s + c.val, 0))
+const aiSubTabs = ['Cost calculator', 'Compare candidates', 'Deploy timeline', 'Principal intel', 'Auto-checklist']
+const selectedDeployCandidate = ref(0)
+const deployCandidates = [
+  { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
+    costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
+    notes:'All documents valid. No renewals needed. Direct deployment.' },
+  { name:'Ruslan Goncharov', i:'RG', color:'#E7A33E', nat:'Ukrainian', origin:'Odessa, Ukraine', dest:'Piraeus, Greece', rank:'2nd Officer',
+    costs:{medical:280,travel:420,flag:160,visa:150,dmw:0,insurance:250,agency:400,renewals:190},
+    notes:'Greece flag endorsement missing — est. $160 + 5 days processing. Higher total due to renewals.' },
+  { name:'Lazar Stoyanov', i:'LS', color:'#B71C1C', nat:'Bulgarian', origin:'Varna, Bulgaria', dest:'Piraeus, Greece', rank:'AB',
+    costs:{medical:400,travel:280,flag:160,visa:0,insurance:250,agency:400,dmw:0,renewals:710},
+    notes:'STCW renewal $350 + Medical PEME $400 (expired). Panama flag $160. High risk — 21 day timeline.' }
+]
+const selectedCand = computed(() => deployCandidates[selectedDeployCandidate.value])
+const candTotal = computed(() => Object.values(selectedCand.value.costs).reduce((s,v) => s + v, 0))
 const compareData = [
   {label:'AI score',v:['92','87','68'],best:0},
   {label:'CrewScore',v:['87','82','64'],best:0},
@@ -199,7 +203,7 @@ const checklist = [
   <div class="dtabs"><button v-for="(t,i) in tabs" :key="i" class="dtab" :class="{active:activeTab===i}" @click="activeTab=i">{{t}}</button></div>
 
   <!-- Tab 0: Shortlist Analyzer -->
-  <div v-if="activeTab===3">
+  <div v-if="activeTab===0">
     <div v-for="sl in shortlists" :key="sl.owner" class="card sec sl-card">
       <div class="sl-top"><div class="sl-ow"><div class="sl-av" :style="{background:sl.color}">{{sl.i}}</div><div><strong>{{sl.owner}}</strong><span class="sl-tm">{{sl.time}} · {{sl.urgency}}</span></div></div><span class="rd" :class="sl.readyPct>=80?'rg':sl.readyPct>=50?'ry':'rr'">{{sl.readyPct}}% ready</span></div>
       <div class="sl-pos">{{sl.position}}</div>
@@ -210,7 +214,7 @@ const checklist = [
   </div>
 
   <!-- Tab 1: Deployment Readiness -->
-  <div v-if="activeTab===4">
+  <div v-if="activeTab===1">
     <div class="card sec">
       <div class="dr-leg"><span><span class="dot dg"></span> Ready</span><span><span class="dot dy"></span> Needs action</span><span><span class="dot dr"></span> Not ready</span><span class="dr-r">AI · Crew · DR scores</span></div>
       <div v-for="(c,ci) in readiness" :key="c.i" class="dr-cand" @click="expandedCandidate=expandedCandidate===ci?null:ci">
@@ -229,7 +233,7 @@ const checklist = [
   </div>
 
   <!-- Tab 3: Crew Calendar with Gantt -->
-  <div v-if="activeTab===0">
+  <div v-if="activeTab===3">
     <div class="card sec">
       <div class="gantt-controls">
         <div class="gc-item">
@@ -293,34 +297,60 @@ const checklist = [
 
 
   <!-- Tab 4: AI Intelligence -->
-  <div v-if="activeTab===1">
+  <div v-if="activeTab===4">
     <div class="ai-subtabs">
       <button v-for="(st,si) in aiSubTabs" :key="si" class="ai-stab" :class="{active:aiSubTab===si}" @click="aiSubTab=si">{{st}}</button>
     </div>
 
-    <!-- Cost Optimizer -->
+    <!-- AI Cost Calculator -->
     <div v-if="aiSubTab===0">
+      <div class="card sec">
+        <h3>Select candidate for cost analysis</h3>
+        <div class="cand-select">
+          <div v-for="(dc,di) in deployCandidates" :key="di" class="cand-opt" :class="{active:selectedDeployCandidate===di}" @click="selectedDeployCandidate=di">
+            <div class="cand-av" :style="{background:dc.color}">{{dc.i}}</div>
+            <div class="cand-opt-info"><strong>{{dc.name}}</strong><span>{{dc.nat}} · {{dc.rank}}</span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="tcol">
         <div class="card sec">
-          <h3>AI cost estimator</h3>
-          <div v-for="(c,ci) in costSliders" :key="ci" class="cost-slider">
-            <label>{{c.label}}</label>
-            <input type="range" :min="c.min" :max="c.max" v-model.number="c.val" step="10">
-            <span class="cs-val">${{c.val.toLocaleString()}}</span>
+          <h3>AI cost breakdown — {{selectedCand.name}}</h3>
+          <div class="route-info">
+            <div class="route-from"><span class="route-dot" style="background:#0A66C2"></span>{{selectedCand.origin}}</div>
+            <div class="route-arrow">→</div>
+            <div class="route-to"><span class="route-dot" style="background:#1B5E20"></span>{{selectedCand.dest}}</div>
           </div>
-          <div class="cost-total-row"><span>Total estimated cost</span><strong>${{totalCost.toLocaleString()}}</strong></div>
+          <div class="cost-breakdown">
+            <div class="cb-row" v-if="selectedCand.costs.medical"><span>Medical (PEME)</span><strong>${{selectedCand.costs.medical}}</strong></div>
+            <div class="cb-row" v-if="selectedCand.costs.travel"><span>Travel ({{selectedCand.origin.split(',')[0]}} → {{selectedCand.dest.split(',')[0]}})</span><strong>${{selectedCand.costs.travel}}</strong></div>
+            <div class="cb-row" v-if="selectedCand.costs.flag"><span>Flag endorsement</span><strong>${{selectedCand.costs.flag}}</strong></div>
+            <div class="cb-row" v-if="selectedCand.costs.visa"><span>Visa processing</span><strong>${{selectedCand.costs.visa}}</strong></div>
+            <div class="cb-row" v-if="selectedCand.costs.dmw"><span>DMW/OEC processing</span><strong>${{selectedCand.costs.dmw}}</strong></div>
+            <div class="cb-row"><span>Insurance & bonds</span><strong>${{selectedCand.costs.insurance}}</strong></div>
+            <div class="cb-row"><span>Agency processing fee</span><strong>${{selectedCand.costs.agency}}</strong></div>
+            <div class="cb-row cb-warn" v-if="selectedCand.costs.renewals"><span>Certificate renewals</span><strong>${{selectedCand.costs.renewals}}</strong></div>
+            <div class="cb-row cb-total"><span>Total deployment cost</span><strong>${{candTotal.toLocaleString()}}</strong></div>
+          </div>
+          <div class="ai-note">{{selectedCand.notes}}</div>
         </div>
         <div>
           <div class="card sec">
-            <h3>Cost comparison per candidate</h3>
+            <h3>Cost comparison — all candidates</h3>
             <div class="cost-compare">
-              <div class="cc-card cc-best"><div class="cc-val">$2,400</div><div class="cc-name">Juan Dela Cruz</div><div class="cc-route">Manila → Piraeus</div><span class="rd rg">Cheapest</span></div>
-              <div class="cc-card"><div class="cc-val" style="color:#E7A33E">$2,850</div><div class="cc-name">Ruslan Goncharov</div><div class="cc-route">Odessa → Piraeus</div></div>
-              <div class="cc-card"><div class="cc-val" style="color:#B71C1C">$3,200</div><div class="cc-name">Lazar Stoyanov</div><div class="cc-route">Sofia → Piraeus + renewals</div></div>
+              <div v-for="(dc,di) in deployCandidates" :key="di" class="cc-card" :class="{'cc-best':di===0}">
+                <div class="cc-val" :style="{color:dc.color}">${{Object.values(dc.costs).reduce((s,v)=>s+v,0).toLocaleString()}}</div>
+                <div class="cc-name">{{dc.name}}</div>
+                <div class="cc-route">{{dc.origin.split(',')[0]}} → {{dc.dest.split(',')[0]}}</div>
+                <span v-if="di===0" class="rd rg">AI recommended</span>
+                <span v-else-if="di===1" class="rd ry">Needs flag</span>
+                <span v-else class="rd rr">High risk</span>
+              </div>
             </div>
           </div>
           <div class="card sec">
-            <h3>Quarterly savings</h3>
+            <h3>Quarterly performance</h3>
             <div class="savings-bar"><div class="savings-fill" style="width:72%">$18,400 saved (72%)</div></div>
             <div class="cr"><span>Budget Q2</span><strong>$25,600</strong></div>
             <div class="cr"><span>Actual spent</span><strong style="color:#1B5E20">$7,200</strong></div>
@@ -447,7 +477,10 @@ const checklist = [
 /* AI Intelligence */
 .ai-subtabs{display:flex;gap:0;margin-bottom:var(--space-3);background:var(--color-surface);border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--color-border)}
 .ai-stab{flex:1;padding:8px 6px;background:none;border:none;font:var(--font-caption);font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-right:1px solid var(--color-border);text-align:center}.ai-stab:last-child{border-right:none}.ai-stab:hover{background:var(--color-white)}.ai-stab.active{background:var(--color-white);color:#1D9E75;box-shadow:inset 0 -2px 0 #1D9E75}
-.cost-slider{display:flex;align-items:center;gap:8px;margin-bottom:8px;font:var(--font-caption)}.cost-slider label{min-width:100px;color:var(--color-text-secondary)}.cost-slider input[type=range]{flex:1;height:4px;accent-color:#1D9E75}.cs-val{min-width:50px;text-align:right;font-weight:500;font:var(--font-caption)}
+.cand-select{display:flex;gap:8px;flex-wrap:wrap}.cand-opt{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);cursor:pointer;transition:all .15s;flex:1;min-width:180px}.cand-opt:hover{border-color:var(--color-primary)}.cand-opt.active{border-color:#1D9E75;background:rgba(29,158,117,0.05)}.cand-av{width:32px;height:32px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500}.cand-opt-info{flex:1}.cand-opt-info strong{display:block;font:var(--font-small);font-weight:500}.cand-opt-info span{font:var(--font-caption);color:var(--color-text-tertiary)}
+.route-info{display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);padding:10px;background:var(--color-surface);border-radius:var(--radius-md)}.route-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}.route-from,.route-to{font:var(--font-small);font-weight:500}.route-arrow{color:var(--color-text-tertiary);font-size:16px}
+.cost-breakdown{display:flex;flex-direction:column}.cb-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border);font:var(--font-small)}.cb-row:last-child{border-bottom:none}.cb-row span{color:var(--color-text-secondary)}.cb-warn{background:var(--color-warning-bg);margin:2px -12px;padding:8px 12px;border-radius:0}.cb-warn span{color:var(--color-warning)}.cb-warn strong{color:var(--color-warning)}.cb-total{border-top:2px solid var(--color-border);margin-top:4px;padding-top:10px}.cb-total strong{font-size:18px;color:var(--color-primary)}
+.ai-note{margin-top:var(--space-2);padding:8px 10px;background:var(--color-surface);border-radius:var(--radius-md);font:var(--font-caption);color:var(--color-text-secondary);border-left:3px solid #1D9E75}
 .cost-total-row{display:flex;justify-content:space-between;border-top:2px solid var(--color-border);margin-top:var(--space-2);padding-top:var(--space-2);font:var(--font-body)}.cost-total-row strong{font-size:18px;color:var(--color-primary)}
 .cost-compare{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cc-card{background:var(--color-surface);border-radius:var(--radius-md);padding:10px;text-align:center}.cc-best{border:1.5px solid var(--color-success)}.cc-val{font-size:20px;font-weight:600;color:var(--color-primary)}.cc-name{font:var(--font-caption);font-weight:500;margin-top:4px}.cc-route{font-size:10px;color:var(--color-text-tertiary)}
 .savings-bar{height:24px;border-radius:4px;background:var(--color-border);overflow:hidden;margin:8px 0}.savings-fill{height:100%;border-radius:4px;background:#1B5E20;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:500;color:#fff}
@@ -459,6 +492,3 @@ const checklist = [
 .cl-list{display:flex;flex-direction:column;gap:4px}.cl-item{display:flex;align-items:center;gap:8px;padding:4px 0;font:var(--font-caption)}.cl-icon{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}.cli-done{background:#E8F5E9;color:#1B5E20}.cli-prog{background:#FFF3E0;color:#E65100}.cli-pend{background:var(--color-surface);color:var(--color-text-tertiary)}.cl-grey{color:var(--color-text-tertiary)}.cl-note{font-size:10px;color:#E65100;margin-left:4px}
 @media(max-width:1024px){.tcol{grid-template-columns:1fr}}@media(max-width:768px){.kg{grid-template-columns:repeat(2,1fr)}.g-hdr,.g-row{grid-template-columns:80px 1fr}.gantt-controls{flex-direction:column}.gc-select{min-width:100%}}
 </style>
-
-
-
