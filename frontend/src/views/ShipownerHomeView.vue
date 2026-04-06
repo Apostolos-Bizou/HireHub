@@ -221,9 +221,7 @@ export default {
   margin-bottom: var(--space-3);
 }
 .kpi-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
+  background: var(--color-white); border-radius: var(--radius-lg); padding: var(--space-4); border: 1px solid var(--color-border); box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
 }
 .kpi-label { font: var(--font-caption); color: var(--color-text-secondary); margin-bottom: 4px; }
 .kpi-val { font-size: 24px; font-weight: 600; }
@@ -334,4 +332,5 @@ export default {
   .dash-header { flex-direction: column; gap: var(--space-3); align-items: flex-start; }
 }
 </style>
+
 
