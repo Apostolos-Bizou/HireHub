@@ -231,26 +231,35 @@ const profile = ref({
   <div class="container profile-layout">
     <main class="profile-main">
       <div class="card hero-card">
-        <div class="hero-banner"></div>
-        <div class="hero-body">
-          <img v-if="userPhoto" :src="userPhoto" class="hero-avatar-img" />
-          <div v-else class="avatar avatar-xl avatar-seafarer hero-avatar">{{ profile.fullName?.split(' ').map(w=>w[0]).join('').substring(0,2) }}</div>
-          <div class="hero-info">
-            <h1>{{ profile.fullName }} <span v-if="profile.verifiedStatus==='VERIFIED'" class="badge badge-verified">&#10003; Verified</span></h1>
-            <p class="hero-headline">{{ profile.currentRank }} | {{ profile.nationality }} | {{ profile.yearsOfExperience }} years sea service</p>
-            <p class="hero-bio">{{ profile.bio }}</p>
-            <div class="hero-stats">
-              <span>&#128065; {{ profile.profileViews.toLocaleString() }} views</span>
-              <span>&#128203; {{ profile.shortlistCount }} shortlists</span>
-              <span>&#128172; {{ profile.inquiries }} inquiries</span>
-              <span>&#128279; {{ profile.connections }} connections</span>
+        <div class="hero-banner"><div class="hero-banner-inner"></div></div>
+        <div class="hero-avatar-row">
+          <img v-if="userPhoto" :src="userPhoto" class="hero-photo" />
+          <div v-else class="hero-photo hero-photo-fallback">{{ profile.fullName?.split(' ').map(w=>w[0]).join('').substring(0,2) }}</div>
+        </div>
+        <div class="hero-content">
+          <div class="hero-left">
+            <h1 class="hero-name">{{ profile.fullName }} <span v-if="profile.verifiedStatus==='VERIFIED'" class="badge badge-verified">&#10003; Verified</span></h1>
+            <p class="hero-title">{{ profile.currentRank }} | {{ profile.nationality }} | {{ profile.yearsOfExperience }} years sea service</p>
+            <p class="hero-loc">Athens, Greece &middot; <a href="#">Contact info</a></p>
+            <p class="hero-conn">{{ profile.connections }}+ connections</p>
+            <div class="hero-btns">
+              <button class="btn btn-primary">+ Add to Shortlist</button>
+              <button class="btn btn-secondary">Message</button>
+              <button class="btn btn-tertiary">Download CV</button>
+              <button class="btn btn-tertiary">More</button>
             </div>
           </div>
-          <div class="hero-actions">
-            <button class="btn btn-primary">+ Add to Shortlist</button>
-            <button class="btn btn-secondary">Message</button>
-            <button class="btn btn-tertiary">Download CV</button>
+          <div class="hero-right">
+            <div class="hero-co"><span class="co-icon">&#9875;</span><div><strong>Tsakos Energy Navigation</strong><p>Chief Officer &mdash; Current</p></div></div>
+            <div class="hero-co"><span class="co-icon">&#127891;</span><div><strong>NTUA Athens</strong><p>BSc Merchant Marine</p></div></div>
           </div>
+        </div>
+        <div class="hero-about"><p>{{ profile.bio }}</p></div>
+        <div class="hero-metrics">
+          <div class="hm"><strong>{{ profile.profileViews.toLocaleString() }}</strong><span>Profile views</span></div>
+          <div class="hm"><strong>{{ profile.shortlistCount }}</strong><span>Shortlists</span></div>
+          <div class="hm"><strong>{{ profile.inquiries }}</strong><span>Inquiries</span></div>
+          <div class="hm"><strong>{{ profile.connections }}</strong><span>Connections</span></div>
         </div>
       </div>
 
@@ -360,7 +369,7 @@ const profile = ref({
                 <span class="share-count">{{ selectedDocs.length }} selected</span>
                 <button class="btn-link" @click="selectAll">Select All</button>
                 <button class="btn-link" @click="selectNone">Clear</button>
-                <button class="btn btn-primary btn-sm" @click="shareDocs" >Share Selected</button>
+                <button class="btn btn-primary btn-sm" @click="shareDocs" :disabled="selectedDocs.length < 1">Share Selected</button>
                 <button class="btn btn-tertiary btn-sm" @click="toggleShareMode">Cancel</button>
               </template>
 <button class="btn-upload" @click="handleUpload('Document')">+ Upload</button>
@@ -448,15 +457,30 @@ const profile = ref({
 
 <style scoped>
 .profile-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;padding-top:16px;padding-bottom:48px}
-.hero-card{overflow:hidden}.hero-banner{height:120px;background:linear-gradient(135deg,#004182 0%,#0A66C2 40%,#1a7fd4 70%,#004182 100%)}
-.hero-body{padding:16px 20px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
-.hero-avatar{margin-top:-40px;border:3px solid #fff}
-.hero-avatar-img{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid white;margin-top:-40px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.hero-info{flex:1;min-width:200px}.hero-info h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.hero-headline{font-size:14px;color:var(--color-text-secondary);margin-top:4px}
-.hero-bio{font-size:13px;color:var(--color-text-secondary);margin-top:8px;line-height:1.5}
-.hero-stats{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--color-text-secondary);flex-wrap:wrap}
-.hero-actions{display:flex;gap:8px;flex-wrap:wrap;align-self:flex-start;margin-top:8px}
+.hero-card{overflow:hidden}
+.hero-banner{height:180px;position:relative;background:linear-gradient(135deg,#001a3a 0%,#004182 30%,#0A66C2 60%,#1a7fd4 80%,#004182 100%)}
+.hero-banner-inner{position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,rgba(0,0,0,0.15))}
+.hero-avatar-row{padding:0 32px;margin-top:-60px;position:relative;z-index:2}
+.hero-photo{width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.15);background:var(--color-primary);display:flex;align-items:center;justify-content:center;color:white;font-size:36px;font-weight:700}
+.hero-content{padding:16px 32px 0;display:flex;gap:40px;align-items:flex-start}
+.hero-left{flex:1}
+.hero-name{font-size:24px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap;line-height:1.3}
+.hero-title{font-size:16px;color:var(--color-text-primary);margin-top:4px;line-height:1.4}
+.hero-loc{font-size:13px;color:var(--color-text-secondary);margin-top:6px}
+.hero-loc a{color:var(--color-primary);font-weight:500;text-decoration:none}
+.hero-conn{font-size:13px;color:var(--color-primary);font-weight:500;margin-top:4px}
+.hero-btns{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.hero-right{min-width:200px;padding-top:4px}
+.hero-co{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
+.co-icon{font-size:24px;flex-shrink:0;margin-top:2px}
+.hero-co strong{font-size:13px;display:block}
+.hero-co p{font-size:12px;color:var(--color-text-secondary);margin-top:1px}
+.hero-about{padding:16px 32px;border-top:1px solid var(--color-border);margin-top:16px}
+.hero-about p{font-size:14px;color:var(--color-text-secondary);line-height:1.6}
+.hero-metrics{display:flex;padding:12px 32px 16px;gap:0;border-top:1px solid var(--color-border)}
+.hm{flex:1;text-align:center;padding:8px 0}
+.hm strong{display:block;font-size:18px;font-weight:600;color:var(--color-primary)}
+.hm span{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
 .tabs-bar{display:flex;background:white;border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden}
 .tabs-bar button{flex:1;padding:12px 16px;border:none;background:none;font-size:13px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
 .tabs-bar button:hover{background:var(--color-surface)}.tabs-bar button.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:rgba(10,102,194,.04)}
@@ -540,7 +564,7 @@ const profile = ref({
 .doc-expiring{background:rgba(230,81,0,0.04);border-radius:4px;padding-left:4px;padding-right:4px}
 .doc-shared{color:#1B5E20;font-weight:bold}
 .doc-private{font-size:10px;color:var(--color-text-tertiary)}
-.docs-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:relative;z-index:10}
+.docs-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .btn-sm{font-size:12px;padding:8px 16px}
 .btn-link{background:none;border:none;color:var(--color-primary);font-size:12px;cursor:pointer;padding:4px 8px;font-weight:500}
 .btn-link:hover{text-decoration:underline}
@@ -551,8 +575,6 @@ const profile = ref({
 .doc-table-head{display:grid;gap:8px;padding:8px 0;border-bottom:2px solid var(--color-border);font-size:10px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
 .doc-row{display:grid;gap:8px;padding:10px 0;border-bottom:1px solid var(--color-border);align-items:center;font-size:12px;transition:background 0.15s}
 </style>
-
-
 
 
 
