@@ -380,8 +380,10 @@ const profile = ref({
                 <button class="btn btn-primary btn-sm" @click="shareDocs" :disabled="selectedDocs.length < 1">Share Selected</button>
                 <button class="btn btn-tertiary btn-sm" @click="toggleShareMode">Cancel</button>
               </template>
-<button class="btn-upload" @click="handleUpload('Document')">+ Upload</button>
-              <button class="btn btn-primary btn-sm" @click="toggleShareMode">Share with Principal</button>
+              <template v-else>
+                <button class="btn-upload" @click="handleUpload('Document')">+ Upload</button>
+                <button class="btn btn-primary btn-sm" @click="toggleShareMode">Share with Principal</button>
+              </template>
             </div>
           </div>
         </div>
@@ -558,7 +560,7 @@ const profile = ref({
 .file-upload:hover{border-color:var(--color-primary)}
 .file-input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer}
 .file-label{font-size:13px;color:var(--color-text-secondary)}
-.docs-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.docs-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;position:relative;z-index:3}
 .doc-cat-title{display:flex;align-items:center;gap:8px}
 .doc-cat-icon{font-size:20px}
 .doc-count{background:var(--color-surface);color:var(--color-text-secondary);font-size:11px;padding:2px 8px;border-radius:10px;font-weight:400}
