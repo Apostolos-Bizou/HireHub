@@ -1,7 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue'
 const activeTab = ref(0)
-const tabs = ['Crew calendar', 'AI intelligence', 'Principal matching', 'Shortlist analyzer', 'Deployment readiness', 'Compliance']
+const tabs = [
+  {name:'Crew calendar', tip:'Ημερολόγιο πληρώματος ανά πλοίο — Gantt chart με συμβόλαια, αντικαταστάσεις, κόστη'},
+  {name:'AI intelligence', tip:'Εργαλεία τεχνητής νοημοσύνης — υπολογισμός κόστους, σύγκριση υποψηφίων, χρονοδιάγραμμα'},
+  {name:'Principal matching', tip:'AI αντιστοίχιση — ποιος ναυτικός ταιριάζει με ποιον πλοιοκτήτη βάσει ιστορικού'},
+  {name:'Shortlist analyzer', tip:'Ανάλυση εισερχόμενων shortlists — ετοιμότητα υποψηφίων ανά αίτημα πλοιοκτήτη'},
+  {name:'Deployment readiness', tip:'Ετοιμότητα deployment — πιστοποιητικά, σημαίες, ιατρικά, διαθεσιμότητα ανά ναυτικό'},
+  {name:'Compliance', tip:'Ειδοποιήσεις συμμόρφωσης — ληγμένα πιστοποιητικά, DMW, απόδοση pipeline'}
+]
 const expandedCandidate = ref(null)
 const selPrincipal = ref(0)
 const selVessel = ref(0)
@@ -127,7 +134,13 @@ function barStyle(b) {
 function daysClass(d){return d<=30?'days-u':d<=60?'days-w':'days-ok'}
 
 const aiSubTab = ref(0)
-const aiSubTabs = ['Cost calculator', 'Compare candidates', 'Deploy timeline', 'Principal intel', 'Auto-checklist']
+const aiSubTabs = [
+  {name:'Cost calculator', tip:'Αυτόματος υπολογισμός κόστους deployment ανά υποψήφιο — ιατρικά, ταξίδι, σημαία, βίζα'},
+  {name:'Compare candidates', tip:'Σύγκριση υποψηφίων πλάι-πλάι σε 13 κριτήρια — AI score, CrewScore, κόστος, χρόνος'},
+  {name:'Deploy timeline', tip:'Βήμα-βήμα χρονοδιάγραμμα deployment — από shortlist μέχρι επιβίβαση'},
+  {name:'Principal intel', tip:'Τι προτιμάει κάθε πλοιοκτήτης — εθνικότητα, εμπειρία, CrewScore, ιστορικό τοποθετήσεων'},
+  {name:'Auto-checklist', tip:'Αυτόματη λίστα ελέγχου 9 βημάτων — τι ολοκληρώθηκε, τι εκκρεμεί, τι περιμένει'}
+]
 const selectedDeployCandidate = ref(0)
 const deployCandidates = [
   { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
@@ -199,8 +212,8 @@ const checklist = [
 <template>
 <div class="container ad">
   <div class="ad-hdr"><div class="ad-hdr-l"><div class="avatar avatar-lg avatar-agent">MA</div><div><h1>Magsaysay Maritime Corp.</h1><p class="ad-sub">AI-powered deployment management · DMW-1234-2026</p></div></div></div>
-  <div class="kg"><div class="kc"><div class="kl">Incoming requests</div><div class="kv" style="color:#B71C1C">4</div><div class="kt">2 urgent</div></div><div class="kc"><div class="kl">In pipeline</div><div class="kv" style="color:#0A66C2">18</div><div class="kt ku">+5 this week</div></div><div class="kc"><div class="kl">Ready to deploy</div><div class="kv" style="color:#1B5E20">6</div><div class="kt ku">All verified</div></div><div class="kc"><div class="kl">Avg deploy time</div><div class="kv">8.4 days</div><div class="kt ku">-2.1 vs last month</div></div><div class="kc"><div class="kl">Placement rate</div><div class="kv" style="color:#1B5E20">94%</div><div class="kt ku">+3% vs Q1</div></div><div class="kc"><div class="kl">Principals</div><div class="kv" style="color:#0A66C2">8</div><div class="kt">All DMW-verified</div></div><div class="kc"><div class="kl">Deployments YTD</div><div class="kv" style="color:#1D9E75">487</div><div class="kt ku">+42 this month</div></div><div class="kc"><div class="kl">Avg CrewScore placed</div><div class="kv" style="color:#1D9E75">81</div><div class="kt ku">Above avg</div></div></div>
-  <div class="dtabs"><button v-for="(t,i) in tabs" :key="i" class="dtab" :class="{active:activeTab===i}" @click="activeTab=i">{{t}}</button></div>
+  <div class="kg"><div class="kc" title="Αιτήματα πλοιοκτητών που περιμένουν απάντηση"><div class="kl">Incoming requests</div><div class="kv" style="color:#B71C1C">4</div><div class="kt">2 urgent</div></div><div class="kc" title="Ναυτικοί σε διαδικασία αξιολόγησης και deployment"><div class="kl">In pipeline</div><div class="kv" style="color:#0A66C2">18</div><div class="kt ku">+5 this week</div></div><div class="kc" title="Ναυτικοί με όλα τα έγγραφα έτοιμα για αναχώρηση"><div class="kl">Ready to deploy</div><div class="kv" style="color:#1B5E20">6</div><div class="kt ku">All verified</div></div><div class="kc" title="Μέσος χρόνος από αίτημα μέχρι επιβίβαση στο πλοίο"><div class="kl">Avg deploy time</div><div class="kv">8.4 days</div><div class="kt ku">-2.1 vs last month</div></div><div class="kc" title="Ποσοστό επιτυχημένων τοποθετήσεων φέτος"><div class="kl">Placement rate</div><div class="kv" style="color:#1B5E20">94%</div><div class="kt ku">+3% vs Q1</div></div><div class="kc" title="Αριθμός πλοιοκτητών που εξυπηρετείτε"><div class="kl">Principals</div><div class="kv" style="color:#0A66C2">8</div><div class="kt">All DMW-verified</div></div><div class="kc" title="Συνολικές τοποθετήσεις από αρχή του έτους"><div class="kl">Deployments YTD</div><div class="kv" style="color:#1D9E75">487</div><div class="kt ku">+42 this month</div></div><div class="kc" title="Μέση βαθμολογία CrewScore των ναυτικών που τοποθετήσατε"><div class="kl">Avg CrewScore placed</div><div class="kv" style="color:#1D9E75">81</div><div class="kt ku">Above avg</div></div></div>
+  <div class="dtabs"><button v-for="(t,i) in tabs" :key="i" class="dtab" :class="{active:activeTab===i}" @click="activeTab=i" :title="t.tip">{{t.name}}</button></div>
 
   <!-- Tab 0: Shortlist Analyzer -->
   <div v-if="activeTab===3">
@@ -299,7 +312,7 @@ const checklist = [
   <!-- Tab 4: AI Intelligence -->
   <div v-if="activeTab===1">
     <div class="ai-subtabs">
-      <button v-for="(st,si) in aiSubTabs" :key="si" class="ai-stab" :class="{active:aiSubTab===si}" @click="aiSubTab=si">{{st}}</button>
+      <button v-for="(st,si) in aiSubTabs" :key="si" class="ai-stab" :class="{active:aiSubTab===si}" @click="aiSubTab=si" :title="st.tip">{{st.name}}</button>
     </div>
 
     <!-- AI Cost Calculator -->
@@ -490,5 +503,7 @@ const checklist = [
 .tl-steps{display:flex;flex-direction:column}.tl-step{display:flex;align-items:flex-start;gap:10px;padding:6px 0}.tl-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px}.tld-done{background:#1B5E20}.tld-prog{background:#E7A33E}.tld-pend{background:var(--color-border)}.tl-info{flex:1;font:var(--font-caption)}.tl-info strong{display:block;font-size:12px}.tl-info span{color:var(--color-text-tertiary);font-size:10px}.tl-day{font:var(--font-caption);font-weight:500;min-width:40px;text-align:right}.tlt-done{color:#1B5E20}.tlt-prog{color:#E7A33E}.tlt-pend{color:var(--color-text-tertiary)}.tl-line-v{width:2px;height:16px;margin-left:5px;background:var(--color-border)}
 .hist-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--color-border);font:var(--font-caption)}.hist-row:last-child{border-bottom:none}.hist-date{min-width:60px;color:var(--color-text-tertiary);font-size:10px}.hist-info{flex:1}.hist-info strong{display:block}.hist-info span{color:var(--color-text-tertiary);font-size:10px}.hist-cost{font-weight:500;color:var(--color-primary);min-width:45px;text-align:right}.hist-days{font-size:10px;color:var(--color-text-secondary);min-width:30px;text-align:right}
 .cl-list{display:flex;flex-direction:column;gap:4px}.cl-item{display:flex;align-items:center;gap:8px;padding:4px 0;font:var(--font-caption)}.cl-icon{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}.cli-done{background:#E8F5E9;color:#1B5E20}.cli-prog{background:#FFF3E0;color:#E65100}.cli-pend{background:var(--color-surface);color:var(--color-text-tertiary)}.cl-grey{color:var(--color-text-tertiary)}.cl-note{font-size:10px;color:#E65100;margin-left:4px}
+.dtab[title]:hover,.ai-stab[title]:hover,.kc[title]:hover{position:relative}
+[title]{cursor:help}
 @media(max-width:1024px){.tcol{grid-template-columns:1fr}}@media(max-width:768px){.kg{grid-template-columns:repeat(2,1fr)}.g-hdr,.g-row{grid-template-columns:80px 1fr}.gantt-controls{flex-direction:column}.gc-select{min-width:100%}}
 </style>

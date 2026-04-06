@@ -32,22 +32,22 @@ const icons = {
 
 const navItems = computed(() => {
   const items = [
-    { icon: icons.home, label: 'Home', to: '/', active: route.path === '/' }
+    { icon: icons.home, label: 'Home', title: 'Αρχική σελίδα — dashboard και επισκόπηση', to: '/', active: route.path === '/' }
   ]
   if (auth.isShipowner) {
     items.push(
-      { icon: icons.search, label: 'Talent Search', to: '/search', active: route.path === '/search' },
-      { icon: icons.aiRec, label: 'AI Recruit', to: '/ai-recommender', active: route.path === '/ai-recommender' },
-      { icon: icons.profile, label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') || route.path.startsWith('/my-profile') },
-      { icon: icons.shortlist, label: 'Shortlist', to: '/shortlists', active: route.path.startsWith('/shortlist') }
+      { icon: icons.search, label: 'Talent Search', title: 'Αναζήτηση ναυτικών — φίλτρα, AI score, CrewScore', to: '/search', active: route.path === '/search' },
+      { icon: icons.aiRec, label: 'AI Recruit', title: 'AI Σύσταση — αυτόματη αντιστοίχιση υποψηφίων', to: '/ai-recommender', active: route.path === '/ai-recommender' },
+      { icon: icons.profile, label: 'Profile', title: 'Το προφίλ σας — στοιχεία, ρυθμίσεις', to: '/profile', active: route.path.startsWith('/profile') || route.path.startsWith('/my-profile') },
+      { icon: icons.shortlist, label: 'Shortlist', title: 'Λίστες υποψηφίων — διαχείριση και αποστολή σε agent', to: '/shortlists', active: route.path.startsWith('/shortlist') }
     )
   } else if (auth.isSeafarer) {
     items.push(
-      { icon: icons.profile, label: 'Profile', to: '/profile', active: route.path.startsWith('/profile') }
+      { icon: icons.profile, label: 'Profile', title: 'Το προφίλ σας — στοιχεία, ρυθμίσεις', to: '/profile', active: route.path.startsWith('/profile') }
     )
   } else if (auth.isAgent) {
     items.push(
-      { icon: icons.dashboard, label: 'Home', to: '/agent', active: route.path === '/agent' }
+      { icon: icons.dashboard, label: 'Dashboard', title: 'Πίνακας ελέγχου — KPIs, αιτήματα, AI εργαλεία', to: '/agent', active: route.path === '/agent' }
     )
   }
   if (auth.user?.role === 'ADMIN') {
@@ -56,9 +56,9 @@ const navItems = computed(() => {
     )
   }
   items.push(
-    { icon: icons.messages, label: 'Messages', to: '/messages', active: route.path === '/messages' },
-    { icon: icons.alerts, label: 'Alerts', to: '/notifications', active: route.path === '/notifications', badge: notif.unreadCount },
-    { icon: icons.settings, label: 'Settings', to: '/settings', active: route.path === '/settings' }
+    { icon: icons.messages, label: 'Messages', title: 'Μηνύματα — επικοινωνία με ναυτικούς, agents, πλοιοκτήτες', to: '/messages', active: route.path === '/messages' },
+    { icon: icons.alerts, label: 'Alerts', title: 'Ειδοποιήσεις — νέα profiles, shortlists, λήξεις', to: '/notifications', active: route.path === '/notifications', badge: notif.unreadCount },
+    { icon: icons.settings, label: 'Settings', title: 'Ρυθμίσεις — λογαριασμός, ιδιωτικότητα, προτιμήσεις', to: '/settings', active: route.path === '/settings' }
   )
   return items
 })
@@ -73,13 +73,13 @@ function handleLogout() {
   <nav class="navbar">
     <div class="navbar-inner container">
       <div class="navbar-logo" @click="router.push('/')">
-        <img src="/hirehub-brand.png" alt="HireHub" class="logo-brand" />
+        <img src="/logo.svg" alt="HireHub" class="logo-mark" style="width:34px;height:34px;border-radius:8px;" />
         <input class="search-input" type="text" placeholder="Search" />
       </div>
 
       <div class="navbar-nav">
         <router-link
-          v-for="item in navItems"
+          v-for="item in navItems" :title="item.title"
           :key="item.to"
           :to="item.to"
           class="nav-item"
@@ -139,7 +139,6 @@ function handleLogout() {
   font-weight: 700;
   font-size: 18px;
 }
-.logo-brand { height: 36px; width: auto; object-fit: contain; }
 .search-input {
   width: 200px;
   padding: 6px 12px 6px 32px;
@@ -218,16 +217,9 @@ function handleLogout() {
 .user-role { font: var(--font-caption); color: var(--color-text-tertiary); text-transform: capitalize; }
 
 @media (max-width: 768px) {
-  .logo-brand { height: 36px; width: auto; object-fit: contain; }
-.search-input { display: none; }
+  .search-input { display: none; }
   .nav-label { display: none; }
   .nav-item { padding: 4px 8px; min-width: 40px; }
   .user-info { display: none; }
 }
 </style>
-
-
-
-
-
-
