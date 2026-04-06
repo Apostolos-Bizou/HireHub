@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+﻿import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -29,19 +29,19 @@ const routes = [
     path: '/dashboard',
     name: 'ShipownerHome',
     component: () => import('@/views/ShipownerHomeView.vue'),
-    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
   },
   {
     path: '/search',
     name: 'TalentSearch',
     component: () => import('@/views/TalentSearchView.vue'),
-    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
   },
   {
     path: '/ai-recommender',
     name: 'AiRecommender',
     component: () => import('@/views/AiRecommenderView.vue'),
-    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
   },
   // ===== PROFILE ROUTING =====
   // Viewing a SEAFARER's public profile (Shipowner/Agent clicks on candidate)
@@ -88,7 +88,7 @@ const routes = [
     path: '/my-profile/company',
     name: 'ShipownerProfile',
     component: () => import('@/views/ShipownerProfileView.vue'),
-    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
   },
   {
     path: '/my-profile/agency',
@@ -106,13 +106,13 @@ const routes = [
     path: '/shortlists',
     name: 'Shortlists',
     component: () => import('@/views/ShortlistView.vue'),
-    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
   },
   {
     path: '/shortlists/:id',
     name: 'ShortlistDetail',
     component: () => import('@/views/ShortlistDetailView.vue'),
-    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
   },
   {
     path: '/agent',
@@ -179,3 +179,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
+
