@@ -26,6 +26,38 @@ async function createPost() {
   } catch {}
 }
 
+const isSeafarer = computed(() => auth.user?.role === 'SEAFARER')
+const isShipowner = computed(() => auth.user?.role === 'SHIPOWNER')
+const isAgent = computed(() => auth.user?.role === 'MANNING_AGENT')
+
+const avatarClass = computed(() => isSeafarer.value ? 'avatar-seafarer' : isAgent.value ? 'avatar-agent' : 'avatar-owner')
+const bannerClass = computed(() => isShipowner.value ? 'banner-owner' : isAgent.value ? 'banner-agent' : 'banner-seafarer')
+
+const sidebarNav = computed(() => {
+  if (isShipowner.value) return [
+    { to: '/', label: 'Home' },
+    { to: '/search', label: 'Talent Search' },
+    { to: '/shortlists', label: 'Shortlists' },
+    { to: '/profile', label: 'Company Profile' },
+    { to: '/messages', label: 'Messages' },
+    { to: '/settings', label: 'Settings' }
+  ]
+  if (isAgent.value) return [
+    { to: '/', label: 'Home' },
+    { to: '/agent', label: 'Dashboard' },
+    { to: '/messages', label: 'Messages' },
+    { to: '/notifications', label: 'Notifications' },
+    { to: '/settings', label: 'Settings' }
+  ]
+  return [
+    { to: '/', label: 'Home' },
+    { to: '/profile', label: 'My Profile' },
+    { to: '/messages', label: 'Messages' },
+    { to: '/notifications', label: 'Notifications' },
+    { to: '/settings', label: 'Settings' }
+  ]
+})
+
 const trending = [
   { topic: "ECDIS 2026 updates", count: 266 },
   { topic: "Red Sea routing changes", count: 525 },
@@ -47,65 +79,84 @@ const openings = [
     <!-- Left Sidebar -->
     <aside class="feed-sidebar-left">
       <div class="card profile-mini">
-        <div class="profile-banner"></div>
-        <img v-if="userPhoto" :src="userPhoto" class="avatar avatar-lg" style="margin:-28px auto 0; width:56px; height:56px; border-radius:50%%; object-fit:cover; border:3px solid white;" />
-        <div v-else class="avatar avatar-lg avatar-owner" style="margin:-28px auto 0">
+        <div class="profile-banner" :class="bannerClass"></div>
+        <img v-if="userPhoto" :src="userPhoto" class="mini-photo" />
+        <div v-else class="avatar avatar-lg" :class="avatarClass" style="margin:-28px auto 0">
           {{ initials(auth.user?.fullName) }}
         </div>
         <h3>{{ auth.user?.fullName }}</h3>
         <p class="role-label">{{ auth.user?.role?.replace('_', ' ') }}</p>
-        <div class="mini-stats">
+        <div v-if="isSeafarer" class="mini-stats">
           <div><strong>4 yrs</strong><span>Sea Service</span></div>
           <div><strong>347</strong><span>Profile Views</span></div>
           <div><strong>12</strong><span>Shortlists</span></div>
         </div>
+        <div v-if="isShipowner" class="mini-stats">
+          <div><strong>65</strong><span>Vessels</span></div>
+          <div><strong>1,560</strong><span>Active Crew</span></div>
+          <div><strong>3</strong><span>Open Needs</span></div>
+        </div>
+        <div v-if="isAgent" class="mini-stats">
+          <div><strong>8</strong><span>Principals</span></div>
+          <div><strong>487</strong><span>Deployments</span></div>
+          <div><strong>94%</strong><span>Placement</span></div>
+        </div>
       </div>
       <nav class="sidebar-nav card">
-        <router-link to="/" class="active">Home</router-link>
-        <router-link to="/search">Talent Search</router-link>
-        <router-link to="/shortlists">Shortlists</router-link>
-        <router-link to="/messages">Messages</router-link>
-        <router-link to="/notifications">Notifications</router-link>
-        <router-link to="/settings">Settings</router-link>
+        <router-link v-for="item in sidebarNav" :key="item.to" :to="item.to" :class="{ active: item.to === '/' }">{{ item.label }}</router-link>
       </nav>
     </aside>
 
     <!-- Main Feed -->
     <main class="feed-main">
+      <div v-if="isShipowner" class="card quick-banner">
+        <div class="quick-banner-inner">
+          <div class="quick-banner-text">
+            <strong>Welcome back, {{ auth.user?.fullName?.split(' ')[0] }}</strong>
+            <span>You have 3 urgent crew needs and 2 new shortlists pending review.</span>
+          </div>
+          <div class="quick-banner-actions">
+            <router-link to="/search" class="btn btn-primary btn-sm">Search Talent</router-link>
+            <router-link to="/shortlists" class="btn btn-secondary btn-sm">View Shortlists</router-link>
+          </div>
+        </div>
+      </div>
+      <div v-if="isAgent" class="card quick-banner quick-banner-agent">
+        <div class="quick-banner-inner">
+          <div class="quick-banner-text">
+            <strong>Welcome back, {{ auth.user?.fullName?.split(' ')[0] }}</strong>
+            <span>You have 3 new shortlist requests from shipowners.</span>
+          </div>
+          <div class="quick-banner-actions">
+            <router-link to="/agent" class="btn btn-primary btn-sm">View Requests</router-link>
+          </div>
+        </div>
+      </div>
+
       <div class="card post-create">
         <div class="post-create-row">
           <img v-if="userPhoto" :src="userPhoto" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" />
-          <div v-else class="avatar avatar-md avatar-owner">{{ initials(auth.user?.fullName) }}</div>
+          <div v-else class="avatar avatar-md" :class="avatarClass">{{ initials(auth.user?.fullName) }}</div>
           <input class="input" v-model="newPost" placeholder="Start a post..." @keyup.enter="createPost" />
         </div>
         <div class="post-actions">
           <button class="post-action">📷 Photo</button>
           <button class="post-action">🎬 Video</button>
           <button class="post-action">📄 Article</button>
-          <button class="post-action">📜 Certificate</button>
+          <button v-if="isSeafarer" class="post-action">📜 Certificate</button>
         </div>
       </div>
 
       <div v-for="post in posts" :key="post.id" class="card post-card">
         <div class="post-header">
           <div class="avatar avatar-md avatar-seafarer">{{ initials(post.authorName || 'U') }}</div>
-          <div>
-            <strong>{{ post.authorName || 'User' }}</strong>
-            <p class="post-meta">{{ post.postType }} · {{ post.createdAt }}</p>
-          </div>
+          <div><strong>{{ post.authorName || 'User' }}</strong><p class="post-meta">{{ post.postType }} · {{ post.createdAt }}</p></div>
         </div>
         <p class="post-body">{{ post.content }}</p>
-        <div class="post-engagement">
-          <span>👍 {{ post.likesCount }} · {{ post.commentsCount }} comments</span>
-        </div>
-        <div class="post-footer">
-          <button>👍 Like</button>
-          <button>💬 Comment</button>
-          <button>↗ Share</button>
-        </div>
+        <div class="post-engagement"><span>👍 {{ post.likesCount }} · {{ post.commentsCount }} comments</span></div>
+        <div class="post-footer"><button>👍 Like</button><button>💬 Comment</button><button>↗ Share</button></div>
       </div>
 
-      <!-- Demo posts if no API -->
       <div v-if="!posts.length" class="card post-card">
         <div class="post-header">
           <div class="avatar avatar-md avatar-seafarer">MS</div>
@@ -124,6 +175,15 @@ const openings = [
         <div class="post-engagement"><span>👍😊 89 · 12 comments</span></div>
         <div class="post-footer"><button>👍 Like</button><button>💬 Comment</button><button>↗ Share</button></div>
       </div>
+      <div v-if="!posts.length && isShipowner" class="card post-card">
+        <div class="post-header">
+          <div class="avatar avatar-md avatar-owner">IM</div>
+          <div><strong>InterManager</strong><p class="post-meta">Industry Association · 1d ago</p></div>
+        </div>
+        <p class="post-body">New crew retention study released: Companies investing in career development platforms see 28% lower turnover rates. Digital visibility tools for seafarers are becoming a key competitive advantage in crew management.</p>
+        <div class="post-engagement"><span>👍 156 · 32 comments</span></div>
+        <div class="post-footer"><button>👍 Like</button><button>💬 Comment</button><button>↗ Share</button></div>
+      </div>
     </main>
 
     <!-- Right Sidebar -->
@@ -133,7 +193,7 @@ const openings = [
         <div class="shipcare-body">
           <span class="shipcare-tag">ShipCare News</span>
           <h3>Philippines DMW issues call to protect seafarers from warlike areas</h3>
-          <p class="shipcare-excerpt">The Department of Migrant Workers has urged manning agencies and seafarers to exercise caution regarding deployment to high-risk maritime zones...</p>
+          <p class="shipcare-excerpt">The Department of Migrant Workers has urged manning agencies and seafarers to exercise caution regarding deployment to...</p>
           <span class="shipcare-date">14 Jul 2025 · HealthNews Next2Me</span>
         </div>
       </a>
@@ -144,12 +204,25 @@ const openings = [
           <span>{{ t.count }} posts</span>
         </div>
       </div>
-      <div class="card sidebar-section">
+      <div v-if="isSeafarer" class="card sidebar-section">
         <h3>Latest openings</h3>
         <div v-for="j in openings" :key="j.title" class="job-item">
           <a href="#">{{ j.title }}</a>
           <span>{{ j.company }} · {{ j.time }}</span>
         </div>
+      </div>
+      <div v-if="isShipowner" class="card sidebar-section">
+        <h3>Market insights</h3>
+        <div class="insight-item"><strong>Filipino officers</strong><span>High availability · Avg 3-week notice</span></div>
+        <div class="insight-item"><strong>Tanker specialists</strong><span>Moderate demand · +5% YoY</span></div>
+        <div class="insight-item"><strong>ECDIS certified</strong><span>Strong demand · 2,400+ on HireHub</span></div>
+      </div>
+      <div v-if="isAgent" class="card sidebar-section">
+        <h3>Pipeline summary</h3>
+        <div class="insight-item"><strong>Received</strong><span>3 candidates</span></div>
+        <div class="insight-item"><strong>Vetting</strong><span>5 candidates</span></div>
+        <div class="insight-item"><strong>Contract</strong><span>2 candidates</span></div>
+        <div class="insight-item"><strong>Deployment</strong><span>2 candidates</span></div>
       </div>
     </aside>
   </div>
@@ -157,9 +230,13 @@ const openings = [
 
 <style scoped>
 .feed-layout { display: grid; grid-template-columns: 200px 1fr 280px; gap: var(--space-5); padding-top: var(--space-5); padding-bottom: var(--space-8); }
-.profile-banner { height: 56px; background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.profile-banner { height: 56px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.banner-seafarer { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); }
+.banner-owner { background: linear-gradient(135deg, var(--color-accent), #D4912F); }
+.banner-agent { background: linear-gradient(135deg, var(--color-agent), #157A5C); }
 .profile-mini { text-align: center; padding-bottom: var(--space-4); }
 .profile-mini h3 { font: var(--font-h3); margin-top: var(--space-2); }
+.mini-photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid white; margin: -28px auto 0; display: block; }
 .role-label { font: var(--font-caption); color: var(--color-text-secondary); text-transform: capitalize; }
 .mini-stats { display: flex; justify-content: center; gap: var(--space-3); margin-top: var(--space-2); }
 .mini-stats div { text-align: center; line-height: 1.3; }
@@ -167,8 +244,14 @@ const openings = [
 .mini-stats span { font-size: 10px; color: var(--color-text-tertiary); line-height: 1.2; }
 .sidebar-nav { padding: var(--space-2) 0; margin-top: var(--space-3); }
 .sidebar-nav a { display: block; padding: var(--space-2) var(--space-4); font: var(--font-body); color: var(--color-text-secondary); text-decoration: none; }
-.sidebar-nav a:hover { background: var(--color-surface); }
+.sidebar-nav a:hover { background: var(--color-surface); text-decoration: none; }
 .sidebar-nav a.active { color: var(--color-primary); font-weight: 500; border-left: 3px solid var(--color-primary); }
+.quick-banner { padding: var(--space-4); margin-bottom: var(--space-3); border-left: 4px solid var(--color-primary); }
+.quick-banner-agent { border-left-color: var(--color-agent); }
+.quick-banner-inner { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
+.quick-banner-text strong { display: block; font: var(--font-body); font-weight: 600; }
+.quick-banner-text span { font: var(--font-small); color: var(--color-text-secondary); }
+.quick-banner-actions { display: flex; gap: var(--space-2); flex-shrink: 0; }
 .post-create { padding: var(--space-4); margin-bottom: var(--space-3); }
 .post-create-row { display: flex; gap: var(--space-3); align-items: center; }
 .post-create-row .input { border-radius: 20px; }
@@ -192,22 +275,17 @@ const openings = [
 .job-item { margin-bottom: var(--space-3); }
 .job-item a { display: block; font: var(--font-small); font-weight: 500; }
 .job-item span { font: var(--font-caption); color: var(--color-text-tertiary); }
-
+.insight-item { margin-bottom: var(--space-3); }
+.insight-item strong { display: block; font: var(--font-small); font-weight: 500; }
+.insight-item span { font: var(--font-caption); color: var(--color-text-tertiary); }
 .shipcare-card { display: block; text-decoration: none; color: inherit; overflow: hidden; margin-bottom: var(--space-3); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
-.shipcare-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.shipcare-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); text-decoration: none; }
 .shipcare-img { width: 100%; height: 160px; object-fit: cover; display: block; }
 .shipcare-body { padding: 14px; }
 .shipcare-tag { display: inline-block; background: #004182; color: white; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 .shipcare-body h3 { font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; color: var(--color-text-primary); }
 .shipcare-excerpt { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .shipcare-date { font-size: 10px; color: var(--color-text-tertiary); }
-
+.btn-sm { font-size: 12px; padding: 6px 14px; }
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
-
-
-
-
-
-
-
