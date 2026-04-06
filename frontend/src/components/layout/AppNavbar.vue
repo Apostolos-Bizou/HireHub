@@ -52,6 +52,7 @@ const navItems = computed(() => {
       { icon: icons.dashboard, label: 'Dashboard', to: '/agent', active: route.path === '/agent' }
     )
   if (auth.user?.role === 'ADMIN') {
+  }
     items.push(
       { icon: icons.admin, label: 'Admin', to: '/admin', active: route.path === '/admin' }
     )
