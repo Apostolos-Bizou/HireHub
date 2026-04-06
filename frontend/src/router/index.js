@@ -17,8 +17,19 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/HomeView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
+    beforeEnter: (to, from, next) => {
+      const auth = useAuthStore()
+      if (auth.user?.role === 'SHIPOWNER') next({ name: 'ShipownerHome' })
+      else next()
+    },
+    component: () => import('@/views/HomeView.vue')
+  },
+  {
+    path: '/dashboard',
+    name: 'ShipownerHome',
+    component: () => import('@/views/ShipownerHomeView.vue'),
+    meta: { requiresAuth: true, roles: ['SHIPOWNER', 'ADMIN'] }
   },
   {
     path: '/search',
