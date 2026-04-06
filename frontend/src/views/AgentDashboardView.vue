@@ -141,6 +141,7 @@ const aiSubTabs = [
   {name:'Principal intel', tip:'Τι προτιμάει κάθε πλοιοκτήτης — εθνικότητα, εμπειρία, CrewScore, ιστορικό τοποθετήσεων'},
   {name:'Auto-checklist', tip:'Αυτόματη λίστα ελέγχου 9 βημάτων — τι ολοκληρώθηκε, τι εκκρεμεί, τι περιμένει'}
 ]
+const selectedRequest = ref(0)
 const selectedDeployCandidate = ref(0)
 const deployCandidates = [
   { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
@@ -318,7 +319,11 @@ const checklist = [
     <!-- AI Cost Calculator -->
     <div v-if="aiSubTab===0">
       <div class="card sec">
-        <h3>Select candidate for cost analysis</h3>
+        <h3>Select incoming request</h3>
+        <select v-model="selectedRequest" @change="selectedDeployCandidate=0" class="gc-select" style="width:100%;margin-bottom:12px">
+          <option v-for="(sl,si) in shortlists" :key="si" :value="si">{{sl.owner}} — {{sl.position}}</option>
+        </select>
+        <h3>Candidates from this request</h3>
         <div class="cand-select">
           <div v-for="(dc,di) in deployCandidates" :key="di" class="cand-opt" :class="{active:selectedDeployCandidate===di}" @click="selectedDeployCandidate=di">
             <div class="cand-av" :style="{background:dc.color}">{{dc.i}}</div>
@@ -507,4 +512,5 @@ const checklist = [
 [title]{cursor:help}
 @media(max-width:1024px){.tcol{grid-template-columns:1fr}}@media(max-width:768px){.kg{grid-template-columns:repeat(2,1fr)}.g-hdr,.g-row{grid-template-columns:80px 1fr}.gantt-controls{flex-direction:column}.gc-select{min-width:100%}}
 </style>
+
 
