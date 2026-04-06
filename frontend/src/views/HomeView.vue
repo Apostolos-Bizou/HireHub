@@ -128,6 +128,15 @@ const openings = [
 
     <!-- Right Sidebar -->
     <aside class="feed-sidebar-right">
+      <a href="https://healthnewsnext2me.dn2me.com/en/category/shipcare" target="_blank" class="card shipcare-card">
+        <img src="https://healthnewsnext2me.dn2me.com/sites/default/files/field/image/5th_safety4sea_limassol_forum.jpeg" class="shipcare-img" alt="ShipCare News" />
+        <div class="shipcare-body">
+          <span class="shipcare-tag">ShipCare News</span>
+          <h3>Philippines DMW issues call to protect seafarers from warlike areas</h3>
+          <p class="shipcare-excerpt">The Department of Migrant Workers has urged manning agencies and seafarers to exercise caution regarding deployment to high-risk maritime zones...</p>
+          <span class="shipcare-date">14 Jul 2025 · HealthNews Next2Me</span>
+        </div>
+      </a>
       <div class="card sidebar-section">
         <h3>Trending in maritime</h3>
         <div v-for="t in trending" :key="t.topic" class="trending-item">
@@ -183,6 +192,15 @@ const openings = [
 .job-item { margin-bottom: var(--space-3); }
 .job-item a { display: block; font: var(--font-small); font-weight: 500; }
 .job-item span { font: var(--font-caption); color: var(--color-text-tertiary); }
+
+.shipcare-card { display: block; text-decoration: none; color: inherit; overflow: hidden; margin-bottom: var(--space-3); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+.shipcare-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.shipcare-img { width: 100%; height: 160px; object-fit: cover; display: block; }
+.shipcare-body { padding: 14px; }
+.shipcare-tag { display: inline-block; background: #004182; color: white; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.shipcare-body h3 { font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; color: var(--color-text-primary); }
+.shipcare-excerpt { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.shipcare-date { font-size: 10px; color: var(--color-text-tertiary); }
 
 @media (max-width: 1024px) { .feed-layout { grid-template-columns: 1fr; } .feed-sidebar-left, .feed-sidebar-right { display: none; } }
 </style>
