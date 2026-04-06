@@ -357,6 +357,7 @@ const profile = ref({
                 <button class="btn btn-primary btn-sm" @click="shareDocs" :disabled="selectedDocs.size === 0">Share Selected</button>
                 <button class="btn btn-tertiary btn-sm" @click="toggleShareMode">Cancel</button>
               </template>
+<button class="btn-upload" @click="handleUpload('Document')">+ Upload</button>
               <button v-else class="btn btn-primary btn-sm" @click="toggleShareMode">Share with Principal</button>
             </div>
           </div>
