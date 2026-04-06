@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 const activeTab = ref(0)
+const selectedRequest = ref(0)
 const tabs = [
   {name:'Crew calendar', tip:'Ημερολόγιο πληρώματος ανά πλοίο — Gantt chart με συμβόλαια, αντικαταστάσεις, κόστη'},
   {name:'AI intelligence', tip:'Εργαλεία τεχνητής νοημοσύνης — υπολογισμός κόστους, σύγκριση υποψηφίων, χρονοδιάγραμμα'},
@@ -153,7 +154,7 @@ const deployCandidates = [
     costs:{medical:400,travel:280,flag:160,visa:0,insurance:250,agency:400,dmw:0,renewals:710},
     notes:'STCW renewal $350 + Medical PEME $400 (expired). Panama flag $160. High risk — 21 day timeline.' }
 ]
-const selectedCand = computed(() => deployCandidates.value ? deployCandidates.value[selectedDeployCandidate.value] : null)
+const selectedCand = computed(() => deployCandidates[selectedDeployCandidate.value] || null)
 const candTotal = computed(() => selectedCand.value ? Object.values(selectedCand.value.costs).reduce((s,v) => s + v, 0) : 0)
 
 const allCompareData = [
@@ -466,7 +467,7 @@ const checkPct = computed(() => Math.round(checkDone.value / checklist.value.len
     <!-- Candidate Compare -->
     <div v-if="aiSubTab===1">
       <div class="card sec">
-        <h3>Side-by-side — {{shortlists[selectedRequest].position}}</h3>
+        <h3>Side-by-side — {{shortlists[selectedRequest]?.position || 'Candidates'}}</h3>
         <div class="cmp-grid">
           <div class="cmp-hdr">Criteria</div><div v-for="dc in compareCandidates" :key="dc.i" class="cmp-hdr"><div class="av-sm" :style="{background:dc.color}">{{dc.i}}</div> {{dc.name}}</div>
           
