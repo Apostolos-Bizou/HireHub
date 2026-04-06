@@ -190,9 +190,9 @@ function boxWidth(from, to) {
         </h1>
         <p class="salary-sub">Compare maritime salaries by rank, vessel type, nationality & experience · Data from 24,847 profiles</p>
       </div>
-      <div v-if="isSeafarer" class="salary-badge premium-badge">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Premium Feature
+      <div class="salary-badge market-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 8 16 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+        Market Intelligence
       </div>
     </div>
 
@@ -402,12 +402,14 @@ function boxWidth(from, to) {
           <p class="source-note" title="Τα δεδομένα ανανεώνονται κάθε μήνα">Data refreshed monthly · Last update: April 2026</p>
         </div>
 
-        <!-- CTA for Seafarers -->
-        <div class="card section cta-card" v-if="isSeafarer">
-          <div class="cta-icon">💡</div>
-          <h3>Know your worth</h3>
-          <p class="cta-text">Update your profile with your latest rank and experience to get personalized salary insights.</p>
-          <router-link to="/profile" class="btn btn-primary" style="width:100%;text-align:center;margin-top:var(--space-3);">Update my profile</router-link>
+        <!-- CTA -->
+        <div class="card section cta-card">
+          <div class="cta-icon">📊</div>
+          <h3>Market intelligence</h3>
+          <p class="cta-text" v-if="isSeafarer">Compare your salary against market rates. Update your profile to get personalized insights.</p>
+          <p class="cta-text" v-else>Use salary benchmarks to stay competitive when hiring and retain top maritime talent.</p>
+          <router-link v-if="isSeafarer" to="/profile" class="btn btn-primary" style="width:100%;text-align:center;margin-top:var(--space-3);">Update my profile</router-link>
+          <router-link v-else to="/search" class="btn btn-primary" style="width:100%;text-align:center;margin-top:var(--space-3);">Search talent</router-link>
         </div>
       </div>
     </div>
@@ -471,12 +473,12 @@ function boxWidth(from, to) {
   gap: var(--space-2);
 }
 .salary-sub { font: var(--font-small); color: var(--color-text-secondary); margin-top: var(--space-1); }
-.premium-badge {
+.market-badge {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #FBEAF0;
-  color: #72243E;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
   padding: 6px 14px;
   border-radius: var(--radius-md);
   font: var(--font-caption);

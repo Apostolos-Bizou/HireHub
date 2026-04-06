@@ -40,7 +40,8 @@ const navItems = computed(() => {
       { icon: icons.search, label: 'Talent Search', title: 'Αναζήτηση ναυτικών — φίλτρα, AI score, CrewScore', to: '/search', active: route.path === '/search' },
       { icon: icons.aiRec, label: 'AI Recruit', title: 'AI Σύσταση — αυτόματη αντιστοίχιση υποψηφίων', to: '/ai-recommender', active: route.path === '/ai-recommender' },
       { icon: icons.profile, label: 'Profile', title: 'Το προφίλ σας — στοιχεία, ρυθμίσεις', to: '/profile', active: route.path.startsWith('/profile') || route.path.startsWith('/my-profile') },
-      { icon: icons.shortlist, label: 'Shortlist', title: 'Λίστες υποψηφίων — διαχείριση και αποστολή σε agent', to: '/shortlists', active: route.path.startsWith('/shortlist') }
+      { icon: icons.shortlist, label: 'Shortlist', title: 'Λίστες υποψηφίων — διαχείριση και αποστολή σε agent', to: '/shortlists', active: route.path.startsWith('/shortlist') },
+      { icon: icons.salary, label: 'Salary', title: 'Σύγκριση μισθών — τιμές αγοράς ανά βαθμό και πλοίο', to: '/salary', active: route.path === '/salary' }
     )
   } else if (auth.isSeafarer) {
     items.push(
@@ -51,7 +52,8 @@ const navItems = computed(() => {
     items.push(
       { icon: icons.search, label: 'Talent Search', to: '/search', active: route.path === '/search' },
       { icon: icons.aiRec, label: 'AI Recruit', to: '/ai-recommender', active: route.path === '/ai-recommender' },
-      { icon: icons.dashboard, label: 'Dashboard', to: '/agent', active: route.path === '/agent' }
+      { icon: icons.dashboard, label: 'Dashboard', to: '/agent', active: route.path === '/agent' },
+      { icon: icons.salary, label: 'Salary', title: 'Σύγκριση μισθών — ανά βαθμό, πλοίο, εθνικότητα', to: '/salary', active: route.path === '/salary' }
     )
   }
   if (auth.user?.role === 'ADMIN') {
