@@ -27,8 +27,86 @@ function selectAll() {
 
 function selectNone() { selectedDocs.value.clear() }
 
+const showModal = ref(false)
+const modalType = ref('')
+const modalForm = ref({})
+
+const modalFields = {
+  'Sea Service': [
+    { key: 'rankHeld', label: 'Rank', type: 'select', options: ['Cadet','3rd Officer','2nd Officer','Chief Officer','Master'] },
+    { key: 'vesselName', label: 'Vessel Name', type: 'text', placeholder: 'MT Example' },
+    { key: 'vesselType', label: 'Vessel Type', type: 'select', options: ['OIL_TANKER','CHEMICAL_TANKER','OIL_CHEMICAL_TANKER','BULK_CARRIER','CONTAINER','LPG_CARRIER','LNG_CARRIER','GENERAL_CARGO'] },
+    { key: 'dwt', label: 'DWT', type: 'text', placeholder: '50,000' },
+    { key: 'flagState', label: 'Flag State', type: 'text', placeholder: 'Panama' },
+    { key: 'companyName', label: 'Company', type: 'text', placeholder: 'Shipping Company' },
+    { key: 'startDate', label: 'Start Date', type: 'date' },
+    { key: 'endDate', label: 'End Date', type: 'date' },
+    { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe your duties...' }
+  ],
+  'Certificate': [
+    { key: 'certName', label: 'Certificate Name', type: 'text', placeholder: 'e.g. STCW Basic Safety' },
+    { key: 'certType', label: 'Type', type: 'select', options: ['COC','STCW','TANKER','ECDIS','MEDICAL','SSO','BRM','FLAG','OTHER'] },
+    { key: 'issuingAuthority', label: 'Issuing Authority', type: 'text', placeholder: 'e.g. Hellenic Coast Guard' },
+    { key: 'issueDate', label: 'Issue Date', type: 'date' },
+    { key: 'expiryDate', label: 'Expiry Date', type: 'date' },
+    { key: 'file', label: 'Upload Scan (PDF/Image)', type: 'file' }
+  ],
+  'Skill': [
+    { key: 'name', label: 'Skill Name', type: 'text', placeholder: 'e.g. Cargo Operations' }
+  ],
+  'Award': [
+    { key: 'title', label: 'Award Title', type: 'text', placeholder: 'e.g. Zero Incident Voyage Award' },
+    { key: 'issuer', label: 'Issued By', type: 'text', placeholder: 'Company or organization' },
+    { key: 'year', label: 'Year', type: 'text', placeholder: '2025' },
+    { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe the achievement...' }
+  ],
+  'Education': [
+    { key: 'institutionName', label: 'Institution', type: 'text', placeholder: 'University or Academy' },
+    { key: 'degree', label: 'Degree / Diploma', type: 'text', placeholder: 'BSc Marine Engineering' },
+    { key: 'endYear', label: 'Graduation Year', type: 'text', placeholder: '2020' },
+    { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Thesis, honors, etc.' }
+  ],
+  'Language': [
+    { key: 'name', label: 'Language', type: 'text', placeholder: 'e.g. French' },
+    { key: 'level', label: 'Proficiency', type: 'select', options: ['Native','Fluent','Conversational','Basic'] }
+  ],
+  'Interest': [
+    { key: 'name', label: 'Interest / Topic', type: 'text', placeholder: 'e.g. Green Shipping' }
+  ],
+  'Document': [
+    { key: 'name', label: 'Document Name', type: 'text', placeholder: 'e.g. Passport' },
+    { key: 'number', label: 'Document Number', type: 'text', placeholder: 'e.g. AK 2847561' },
+    { key: 'issued', label: 'Issue Date', type: 'date' },
+    { key: 'expires', label: 'Expiry Date', type: 'date' },
+    { key: 'file', label: 'Upload Document (PDF/Image)', type: 'file' }
+  ]
+}
+
 function handleUpload(section) {
-  alert("Upload to " + section + " — File picker would open here. In production this connects to Azure Blob Storage.")
+  modalType.value = section
+  modalForm.value = {}
+  showModal.value = true
+}
+
+function submitForm() {
+  const section = modalType.value
+  if (section === 'Sea Service') {
+    profile.value.seaServiceRecords.push({ id: Date.now().toString(), ...modalForm.value, status: 'VALID' })
+  } else if (section === 'Certificate') {
+    profile.value.certificates.push({ id: Date.now().toString(), ...modalForm.value, status: 'VALID', verifiedStatus: 'UNVERIFIED' })
+  } else if (section === 'Skill') {
+    profile.value.skills.push({ name: modalForm.value.name, endorsements: 0 })
+  } else if (section === 'Award') {
+    profile.value.awards.push({ ...modalForm.value })
+  } else if (section === 'Education') {
+    profile.value.education.push({ ...modalForm.value })
+  } else if (section === 'Language') {
+    profile.value.languages.push({ ...modalForm.value, flag: '' })
+  } else if (section === 'Interest') {
+    profile.value.interests.push(modalForm.value.name)
+  }
+  showModal.value = false
+  modalForm.value = {}
 }
 
 function shareDocs() {
@@ -311,6 +389,38 @@ const profile = ref({
           </div>
         </div>
       </template>
+
+      <!-- Modal Form -->
+      <teleport to="body">
+        <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+          <div class="modal-box">
+            <div class="modal-header">
+              <h2>Add {{ modalType }}</h2>
+              <button class="modal-close" @click="showModal = false">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div v-for="field in modalFields[modalType]" :key="field.key" class="form-group">
+                <label>{{ field.label }}</label>
+                <input v-if="field.type === 'text'" type="text" v-model="modalForm[field.key]" :placeholder="field.placeholder" class="form-input" />
+                <input v-else-if="field.type === 'date'" type="date" v-model="modalForm[field.key]" class="form-input" />
+                <select v-else-if="field.type === 'select'" v-model="modalForm[field.key]" class="form-input">
+                  <option value="" disabled selected>Select...</option>
+                  <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt.replace(/_/g, ' ') }}</option>
+                </select>
+                <textarea v-else-if="field.type === 'textarea'" v-model="modalForm[field.key]" :placeholder="field.placeholder" class="form-input form-textarea" rows="3"></textarea>
+                <div v-else-if="field.type === 'file'" class="file-upload">
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" class="file-input" />
+                  <span class="file-label">Choose file (PDF, JPG, PNG)</span>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-tertiary" @click="showModal = false">Cancel</button>
+              <button class="btn btn-primary" @click="submitForm">Save {{ modalType }}</button>
+            </div>
+          </div>
+        </div>
+      </teleport>
     </main>
 
     <aside class="profile-sidebar">
@@ -391,6 +501,23 @@ const profile = ref({
 .prog{height:8px;background:var(--color-surface);border-radius:4px;overflow:hidden}
 .prog-fill{height:100%;background:var(--color-primary);border-radius:4px}
 @media(max-width:768px){.profile-layout{grid-template-columns:1fr}}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-box{background:white;border-radius:12px;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--color-border)}
+.modal-header h2{font-size:18px;font-weight:600;margin:0}
+.modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--color-text-secondary);padding:4px 8px;border-radius:4px}
+.modal-close:hover{background:var(--color-surface)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--color-border);display:flex;justify-content:flex-end;gap:8px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px}
+.form-input{width:100%;padding:10px 12px;border:1px solid var(--color-border);border-radius:8px;font-size:13px;font-family:inherit;transition:border-color 0.2s;box-sizing:border-box}
+.form-input:focus{outline:none;border-color:var(--color-primary);box-shadow:0 0 0 3px rgba(10,102,194,0.1)}
+.form-textarea{resize:vertical;min-height:80px}
+.file-upload{position:relative;border:2px dashed var(--color-border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s}
+.file-upload:hover{border-color:var(--color-primary)}
+.file-input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.file-label{font-size:13px;color:var(--color-text-secondary)}
 .docs-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .doc-cat-title{display:flex;align-items:center;gap:8px}
 .doc-cat-icon{font-size:20px}
