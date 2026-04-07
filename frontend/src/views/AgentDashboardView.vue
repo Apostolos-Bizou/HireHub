@@ -192,7 +192,7 @@ const allCompareData = [
   ]
 ]
 const compareData = computed(() => allCompareData[selectedRequest.value] || allCompareData[0])
-const compareCandidates = computed(() => deployCandidates.value || [])
+const compareCandidates = computed(() => deployCandidates || [])
 
 const allDeploySteps = [
   // Request 0: Varship
@@ -307,12 +307,12 @@ const checkPct = computed(() => Math.round(checkDone.value / checklist.value.len
 
   <!-- Tab 0: Shortlist Analyzer -->
   <div v-if="activeTab===3">
-    <div v-for="sl in shortlists" :key="sl.owner" class="card sec sl-card">
+    <div v-for="(sl,si) in shortlists" :key="sl.owner" class="card sec sl-card">
       <div class="sl-top"><div class="sl-ow"><div class="sl-av" :style="{background:sl.color}">{{sl.i}}</div><div><strong>{{sl.owner}}</strong><span class="sl-tm">{{sl.time}} · {{sl.urgency}}</span></div></div><span class="rd" :class="sl.readyPct>=80?'rg':sl.readyPct>=50?'ry':'rr'">{{sl.readyPct}}% ready</span></div>
       <div class="sl-pos">{{sl.position}}</div>
       <div class="sl-bar"><div class="sl-fill" :style="{width:sl.readyPct+'%',background:sl.readyPct>=80?'#1B5E20':'#E7A33E'}"></div></div>
       <div class="sl-cands"><div v-for="c in sl.candidates" :key="c.i" class="sl-c"><div class="sl-ca" :style="{background:c.c}">{{c.i}}</div>{{c.n}}<span class="rd" :class="c.sc">{{c.s}}</span></div></div>
-      <div class="sl-acts"><button class="btn btn-primary btn-sm">Review candidates</button><button class="btn btn-secondary btn-sm">Message owner</button></div>
+      <div class="sl-acts"><button class="btn btn-primary btn-sm" @click="selectedRequest=si;activeTab=1">Review candidates</button><button class="btn btn-secondary btn-sm">Message owner</button></div>
     </div>
   </div>
 
@@ -401,6 +401,22 @@ const checkPct = computed(() => Math.round(checkDone.value / checklist.value.len
 
   <!-- Tab 4: AI Intelligence -->
   <div v-if="activeTab===1">
+    <!-- Request Selector -->
+    <div class="card sec" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font:var(--font-caption);color:var(--color-text-secondary);margin-bottom:4px;">Analyzing request from:</div>
+          <select v-model="selectedRequest" style="padding:8px 12px;border:1px solid var(--color-border);border-radius:8px;font:var(--font-body);font-weight:500;min-width:320px;cursor:pointer;">
+            <option v-for="(sl,si) in shortlists" :key="si" :value="si">{{sl.owner}} — {{sl.position}}</option>
+          </select>
+        </div>
+        <div style="text-align:right;">
+          <div style="font:var(--font-caption);color:var(--color-text-tertiary);">{{shortlists[selectedRequest]?.candidates?.length || 3}} candidates</div>
+          <div style="font:var(--font-caption);color:var(--color-text-tertiary);">{{shortlists[selectedRequest]?.urgency || 'Standard'}}</div>
+        </div>
+      </div>
+    </div>
+
     <div class="ai-subtabs">
       <button v-for="(st,si) in aiSubTabs" :key="si" class="ai-stab" :class="{active:aiSubTab===si}" @click="aiSubTab=si" :title="st.tip">{{st.name}}</button>
     </div>
