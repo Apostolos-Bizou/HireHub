@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue"
+import { ref, onMounted } from "vue"
 import { useRouter, useRoute } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 
@@ -11,14 +11,50 @@ const password = ref("")
 const error = ref("")
 const loading = ref(false)
 
+// Auto-login από landing page (token στο URL)
+onMounted(async () => {
+  const token = route.query.token
+  const refresh = route.query.refresh
+  const userParam = route.query.user
+
+  if (token && userParam) {
+    try {
+      const user = JSON.parse(decodeURIComponent(userParam))
+      // Αποθήκευσε στο store και localStorage
+      localStorage.setItem('hirehub_token', token)
+      localStorage.setItem('hirehub_refresh', refresh || '')
+      localStorage.setItem('hirehub_user', JSON.stringify(user))
+      // Ενημέρωσε το auth store
+      auth.token = token
+      auth.user = user
+      // Redirect βάσει ρόλου
+      redirectByRole(user.role)
+    } catch (e) {
+      console.error('Auto-login failed:', e)
+    }
+  }
+})
+
+function redirectByRole(role) {
+  if (!role) { router.push('/'); return }
+  switch (role.toUpperCase()) {
+    case 'SEAFARER':      router.push('/'); break
+    case 'SHIPOWNER':     router.push('/'); break
+    case 'MANNING_AGENT': router.push('/'); break
+    case 'ADMIN':         router.push('/admin'); break
+    default:              router.push('/')
+  }
+}
+
 async function handleLogin() {
   error.value = ""
   loading.value = true
   try {
     await auth.login(email.value, password.value)
-    router.push(route.query.redirect || "/")
+    const user = auth.user
+    redirectByRole(user?.role)
   } catch (e) {
-    error.value = e.response?.data?.message || "Login failed"
+    error.value = e.response?.data?.message || "Invalid email or password"
   } finally {
     loading.value = false
   }
