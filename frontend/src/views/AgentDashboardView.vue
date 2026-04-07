@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 const activeTab = ref(0)
 const selectedRequest = ref(0)
 const tabs = [
@@ -143,18 +143,38 @@ const aiSubTabs = [
   {name:'Auto-checklist', tip:'Αυτόματη λίστα ελέγχου 9 βημάτων — τι ολοκληρώθηκε, τι εκκρεμεί, τι περιμένει'}
 ]
 const selectedDeployCandidate = ref(0)
-const deployCandidates = [
-  { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
-    costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
-    notes:'All documents valid. No renewals needed. Direct deployment.' },
-  { name:'Ruslan Goncharov', i:'RG', color:'#E7A33E', nat:'Ukrainian', origin:'Odessa, Ukraine', dest:'Piraeus, Greece', rank:'2nd Officer',
-    costs:{medical:280,travel:420,flag:160,visa:150,dmw:0,insurance:250,agency:400,renewals:190},
-    notes:'Greece flag endorsement missing — est. $160 + 5 days processing. Higher total due to renewals.' },
-  { name:'Lazar Stoyanov', i:'LS', color:'#B71C1C', nat:'Bulgarian', origin:'Varna, Bulgaria', dest:'Piraeus, Greece', rank:'AB',
-    costs:{medical:400,travel:280,flag:160,visa:0,insurance:250,agency:400,dmw:0,renewals:710},
-    notes:'STCW renewal $350 + Medical PEME $400 (expired). Panama flag $160. High risk — 21 day timeline.' }
+watch(selectedRequest, () => { selectedDeployCandidate.value = 0 })
+const allDeployCandidates = [
+  // Request 0: Varship 3rd Officer
+  [
+    { name:'Juan Dela Cruz', i:'JD', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Piraeus, Greece', rank:'3rd Officer',
+      costs:{medical:350,travel:890,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:0},
+      notes:'All documents valid. No renewals needed. Direct deployment.' },
+    { name:'Ruslan Goncharov', i:'RG', color:'#E7A33E', nat:'Ukrainian', origin:'Odessa, Ukraine', dest:'Piraeus, Greece', rank:'2nd Officer',
+      costs:{medical:280,travel:420,flag:160,visa:150,dmw:0,insurance:250,agency:400,renewals:190},
+      notes:'Greece flag endorsement missing — est. $160 + 5 days processing. Higher total due to renewals.' },
+    { name:'Lazar Stoyanov', i:'LS', color:'#B71C1C', nat:'Bulgarian', origin:'Varna, Bulgaria', dest:'Piraeus, Greece', rank:'AB',
+      costs:{medical:400,travel:280,flag:160,visa:0,insurance:250,agency:400,dmw:0,renewals:710},
+      notes:'STCW renewal $350 + Medical PEME $400 (expired). Panama flag $160. High risk — 21 day timeline.' }
+  ],
+  // Request 1: Diana Chief Engineer
+  [
+    { name:'Dmitry Petrov', i:'DP', color:'#1D9E75', nat:'Russian', origin:'St Petersburg, Russia', dest:'Rotterdam, Netherlands', rank:'Chief Engineer',
+      costs:{medical:320,travel:580,flag:0,visa:180,dmw:0,insurance:250,agency:400,renewals:0},
+      notes:'All documents valid. Experienced Chief Engineer with 12 years. Direct deployment possible.' },
+    { name:'Raj Patel', i:'RP', color:'#E7A33E', nat:'Indian', origin:'Mumbai, India', dest:'Rotterdam, Netherlands', rank:'Chief Engineer',
+      costs:{medical:300,travel:720,flag:160,visa:200,dmw:0,insurance:250,agency:400,renewals:0},
+      notes:'Liberia flag endorsement needed — est. $160 + 7 days. Travel cost higher from Mumbai.' },
+    { name:'Miguel Santos', i:'MS', color:'#0A66C2', nat:'Filipino', origin:'Manila, Philippines', dest:'Rotterdam, Netherlands', rank:'2nd Engineer',
+      costs:{medical:350,travel:950,flag:0,visa:200,dmw:150,insurance:250,agency:400,renewals:280},
+      notes:'COC upgrade to Chief Engineer pending. STCW refresher $280 needed. 14-day timeline.' },
+    { name:'Chen Wei', i:'CW', color:'#534AB7', nat:'Chinese', origin:'Shanghai, China', dest:'Rotterdam, Netherlands', rank:'Chief Engineer',
+      costs:{medical:450,travel:680,flag:160,visa:220,dmw:0,insurance:250,agency:400,renewals:0},
+      notes:'Medical renewal due in 45 days — schedule PEME before deployment. Liberia flag needed.' }
+  ]
 ]
-const selectedCand = computed(() => deployCandidates[selectedDeployCandidate.value] || null)
+const deployCandidates = computed(() => allDeployCandidates[selectedRequest.value] || allDeployCandidates[0])
+const selectedCand = computed(() => deployCandidates.value ? deployCandidates.value[selectedDeployCandidate.value] || null : null)
 const candTotal = computed(() => selectedCand.value ? Object.values(selectedCand.value.costs).reduce((s,v) => s + v, 0) : 0)
 
 const allCompareData = [
@@ -192,7 +212,7 @@ const allCompareData = [
   ]
 ]
 const compareData = computed(() => allCompareData[selectedRequest.value] || allCompareData[0])
-const compareCandidates = computed(() => deployCandidates || [])
+const compareCandidates = computed(() => deployCandidates.value || [])
 
 const allDeploySteps = [
   // Request 0: Varship
