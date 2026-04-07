@@ -7,6 +7,51 @@ const firstName = computed(() => auth.user?.fullName?.split(' ')[0] || 'Seafarer
 
 // Active demand tab
 const demandView = ref('rank')
+const expandedRank = ref(null)
+
+// Demand data with top-rated companies per rank
+const demandData = [
+  { rank: 'Master', count: 28, trend: '+5 vs last week', highlight: false, companies: [
+    { name: 'Stolt-Nielsen', initials: 'SN', color: '#534AB7', country: 'Norway', vessels: 40, crewRating: 4.7, openings: 5 },
+    { name: 'Tsakos Energy', initials: 'TE', color: '#0A66C2', country: 'Greece', vessels: 78, crewRating: 4.5, openings: 4 }
+  ]},
+  { rank: 'Chief Officer', count: 34, trend: '+8 vs last week', highlight: false, companies: [
+    { name: 'Capital Ship Mgmt', initials: 'CS', color: '#1D9E75', country: 'Greece', vessels: 92, crewRating: 4.4, openings: 6 },
+    { name: 'Tsakos Energy', initials: 'TE', color: '#0A66C2', country: 'Greece', vessels: 78, crewRating: 4.5, openings: 5 }
+  ]},
+  { rank: '2nd Officer', count: 52, trend: '+12 vs last week', highlight: true, companies: [
+    { name: 'Tsakos Energy', initials: 'TE', color: '#0A66C2', country: 'Greece', vessels: 78, crewRating: 4.5, openings: 8 },
+    { name: 'Diana Shipping', initials: 'DS', color: '#E7A33E', country: 'Greece', vessels: 36, crewRating: 4.3, openings: 6 }
+  ]},
+  { rank: '3rd Officer', count: 67, trend: '+15 vs last week', highlight: true, companies: [
+    { name: 'Tsakos Energy', initials: 'TE', color: '#0A66C2', country: 'Greece', vessels: 78, crewRating: 4.5, openings: 10 },
+    { name: 'Capital Ship Mgmt', initials: 'CS', color: '#1D9E75', country: 'Greece', vessels: 92, crewRating: 4.4, openings: 8 }
+  ]},
+  { rank: 'Chief Engineer', count: 22, trend: 'Stable', highlight: false, companies: [
+    { name: 'Stolt-Nielsen', initials: 'SN', color: '#534AB7', country: 'Norway', vessels: 40, crewRating: 4.7, openings: 3 },
+    { name: 'Dorian LPG', initials: 'DL', color: '#D85A30', country: 'Greece', vessels: 22, crewRating: 4.2, openings: 2 }
+  ]},
+  { rank: '2nd Engineer', count: 38, trend: '+6 vs last week', highlight: false, companies: [
+    { name: 'Capital Ship Mgmt', initials: 'CS', color: '#1D9E75', country: 'Greece', vessels: 92, crewRating: 4.4, openings: 5 },
+    { name: 'Costamare', initials: 'CM', color: '#E7A33E', country: 'Greece', vessels: 114, crewRating: 4.1, openings: 4 }
+  ]},
+  { rank: '3rd Engineer', count: 41, trend: '+9 vs last week', highlight: false, companies: [
+    { name: 'Tsakos Energy', initials: 'TE', color: '#0A66C2', country: 'Greece', vessels: 78, crewRating: 4.5, openings: 6 },
+    { name: 'Varship Shipping', initials: 'VS', color: '#1D9E75', country: 'Greece', vessels: 3, crewRating: 4.6, openings: 2 }
+  ]},
+  { rank: 'Electrician', count: 18, trend: '+3 vs last week', highlight: false, companies: [
+    { name: 'Stolt-Nielsen', initials: 'SN', color: '#534AB7', country: 'Norway', vessels: 40, crewRating: 4.7, openings: 2 },
+    { name: 'Capital Ship Mgmt', initials: 'CS', color: '#1D9E75', country: 'Greece', vessels: 92, crewRating: 4.4, openings: 2 }
+  ]},
+  { rank: 'Bosun', count: 24, trend: 'Stable', highlight: false, companies: [
+    { name: 'Diana Shipping', initials: 'DS', color: '#E7A33E', country: 'Greece', vessels: 36, crewRating: 4.3, openings: 4 },
+    { name: 'Costamare', initials: 'CM', color: '#E7A33E', country: 'Greece', vessels: 114, crewRating: 4.1, openings: 3 }
+  ]},
+  { rank: 'AB Seaman', count: 56, trend: '+11 vs last week', highlight: true, companies: [
+    { name: 'Capital Ship Mgmt', initials: 'CS', color: '#1D9E75', country: 'Greece', vessels: 92, crewRating: 4.4, openings: 9 },
+    { name: 'Tsakos Energy', initials: 'TE', color: '#0A66C2', country: 'Greece', vessels: 78, crewRating: 4.5, openings: 7 }
+  ]}
+]
 </script>
 
 <template>
@@ -83,67 +128,29 @@ const demandView = ref('rank')
             </h2>
             <span class="section-tag" title="Τελευταία ενημέρωση σήμερα">Live data</span>
           </div>
-          <p class="section-sub" title="Κλικ σε βαθμό για περισσότερες πληροφορίες">Number of active openings per rank across all hiring companies</p>
+          <p class="section-sub" title="Κλικ σε βαθμό για τις καλύτερες εταιρείες">Click on a rank to see top-rated companies hiring · Ratings by seafarers</p>
           <div class="demand-grid">
-            <div class="demand-card" title="Master — πλοίαρχος, ανώτατη βαθμίδα">
-              <div class="demand-rank">Master</div>
-              <div class="demand-count">28</div>
-              <div class="demand-bar"><div class="demand-fill" style="width:42%"></div></div>
-              <div class="demand-trend kpi-up">+5 vs last week</div>
-            </div>
-            <div class="demand-card" title="Chief Officer — ύπαρχος">
-              <div class="demand-rank">Chief Officer</div>
-              <div class="demand-count">34</div>
-              <div class="demand-bar"><div class="demand-fill" style="width:51%"></div></div>
-              <div class="demand-trend kpi-up">+8 vs last week</div>
-            </div>
-            <div class="demand-card highlight" title="2nd Officer — δεύτερος αξιωματικός">
-              <div class="demand-rank">2nd Officer</div>
-              <div class="demand-count">52</div>
-              <div class="demand-bar"><div class="demand-fill demand-fill-high" style="width:78%"></div></div>
-              <div class="demand-trend kpi-up">+12 vs last week</div>
-            </div>
-            <div class="demand-card highlight" title="3rd Officer — τρίτος αξιωματικός">
-              <div class="demand-rank">3rd Officer</div>
-              <div class="demand-count">67</div>
-              <div class="demand-bar"><div class="demand-fill demand-fill-high" style="width:100%"></div></div>
-              <div class="demand-trend kpi-up">+15 vs last week</div>
-            </div>
-            <div class="demand-card" title="Chief Engineer — πρώτος μηχανικός">
-              <div class="demand-rank">Chief Engineer</div>
-              <div class="demand-count">22</div>
-              <div class="demand-bar"><div class="demand-fill" style="width:33%"></div></div>
-              <div class="demand-trend">Stable</div>
-            </div>
-            <div class="demand-card" title="2nd Engineer — δεύτερος μηχανικός">
-              <div class="demand-rank">2nd Engineer</div>
-              <div class="demand-count">38</div>
-              <div class="demand-bar"><div class="demand-fill" style="width:57%"></div></div>
-              <div class="demand-trend kpi-up">+6 vs last week</div>
-            </div>
-            <div class="demand-card" title="3rd Engineer — τρίτος μηχανικός">
-              <div class="demand-rank">3rd Engineer</div>
-              <div class="demand-count">41</div>
-              <div class="demand-bar"><div class="demand-fill" style="width:61%"></div></div>
-              <div class="demand-trend kpi-up">+9 vs last week</div>
-            </div>
-            <div class="demand-card" title="Electrician — ηλεκτρολόγος">
-              <div class="demand-rank">Electrician</div>
-              <div class="demand-count">18</div>
-              <div class="demand-bar"><div class="demand-fill" style="width:27%"></div></div>
-              <div class="demand-trend kpi-up">+3 vs last week</div>
-            </div>
-            <div class="demand-card" title="Bosun — βατσιμάνης">
-              <div class="demand-rank">Bosun</div>
-              <div class="demand-count">24</div>
-              <div class="demand-bar"><div class="demand-fill" style="width:36%"></div></div>
-              <div class="demand-trend">Stable</div>
-            </div>
-            <div class="demand-card" title="AB Seaman — ναύτης">
-              <div class="demand-rank">AB Seaman</div>
-              <div class="demand-count">56</div>
-              <div class="demand-bar"><div class="demand-fill demand-fill-high" style="width:84%"></div></div>
-              <div class="demand-trend kpi-up">+11 vs last week</div>
+            <div v-for="d in demandData" :key="d.rank" class="demand-card" :class="{ highlight: d.highlight, expanded: expandedRank === d.rank }" @click="expandedRank = expandedRank === d.rank ? null : d.rank">
+              <div class="demand-rank">{{ d.rank }}</div>
+              <div class="demand-count">{{ d.count }}</div>
+              <div class="demand-bar"><div class="demand-fill" :class="{ 'demand-fill-high': d.highlight }" :style="{ width: (d.count / 67 * 100) + '%' }"></div></div>
+              <div class="demand-trend" :class="{ 'kpi-up': d.trend.startsWith('+') }">{{ d.trend }}</div>
+              <!-- Expanded: Top 2 companies -->
+              <div v-if="expandedRank === d.rank" class="demand-companies">
+                <div class="dc-label">Top rated companies hiring {{ d.rank }}s:</div>
+                <div v-for="c in d.companies" :key="c.name" class="dc-company">
+                  <div class="dc-avatar" :style="{ background: c.color }">{{ c.initials }}</div>
+                  <div class="dc-info">
+                    <strong>{{ c.name }}</strong>
+                    <span>{{ c.country }} · {{ c.vessels }} vessels</span>
+                  </div>
+                  <div class="dc-scores">
+                    <div class="dc-score dc-score-green" :title="'Crew rating ' + c.crewRating + '/5 by seafarers'">{{ c.crewRating }}</div>
+                    <div class="dc-score dc-score-blue" :title="c.openings + ' open positions'">{{ c.openings }}</div>
+                  </div>
+                </div>
+                <router-link :to="'/search?rank=' + d.rank" class="dc-view-all">View all {{ d.count }} {{ d.rank }}s</router-link>
+              </div>
             </div>
           </div>
         </div>
@@ -449,15 +456,53 @@ export default {
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   transition: background 0.15s;
+  cursor: pointer;
 }
 .demand-card:hover { background: var(--color-primary-light); }
 .demand-card.highlight { border-left: 3px solid var(--color-primary); }
+.demand-card.expanded { background: var(--color-primary-light); border: 1.5px solid var(--color-primary); grid-column: span 2; }
 .demand-rank { font: var(--font-small); font-weight: 500; }
 .demand-count { font-size: 22px; font-weight: 600; color: var(--color-primary); margin: 2px 0; }
 .demand-bar { height: 4px; background: var(--color-border); border-radius: 2px; margin: 6px 0; }
 .demand-fill { height: 100%; background: var(--color-primary); border-radius: 2px; transition: width 0.4s ease; opacity: 0.6; }
 .demand-fill-high { opacity: 1; background: var(--color-primary); }
 .demand-trend { font: var(--font-caption); color: var(--color-text-tertiary); }
+
+/* Expanded companies */
+.demand-companies { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+.dc-label { font: var(--font-caption); font-weight: 500; color: var(--color-text-secondary); margin-bottom: var(--space-2); }
+.dc-company {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.dc-company:last-of-type { border-bottom: none; }
+.dc-avatar {
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 600; font-size: 11px; flex-shrink: 0;
+}
+.dc-info { flex: 1; min-width: 0; }
+.dc-info strong { display: block; font: var(--font-small); font-weight: 500; }
+.dc-info span { font: var(--font-caption); color: var(--color-text-tertiary); }
+.dc-scores { display: flex; gap: 4px; flex-shrink: 0; }
+.dc-score {
+  width: 30px; height: 30px; border-radius: 50%; border: 2px solid;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+.dc-score-green { border-color: var(--color-success); color: var(--color-success); }
+.dc-score-blue { border-color: var(--color-primary); color: var(--color-primary); }
+.dc-view-all {
+  display: block; text-align: center; margin-top: var(--space-2);
+  font: var(--font-caption); font-weight: 500; color: var(--color-primary);
+  padding: var(--space-2); border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md); text-decoration: none;
+  transition: background 0.15s;
+}
+.dc-view-all:hover { background: var(--color-white); text-decoration: none; }
 
 /* Company List */
 .company-list { display: flex; flex-direction: column; }
