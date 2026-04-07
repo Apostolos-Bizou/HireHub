@@ -11,48 +11,42 @@ const password = ref("")
 const error = ref("")
 const loading = ref(false)
 
-// Auto-login από landing page (token στο URL)
-onMounted(async () => {
-  const token = route.query.token
-  const refresh = route.query.refresh
-  const userParam = route.query.user
+function redirectByRole(role) {
+  const r = role?.toUpperCase()
+  if (r === 'SEAFARER')      return router.push({ name: 'SeafarerHome' })
+  if (r === 'SHIPOWNER')     return router.push({ name: 'ShipownerHome' })
+  if (r === 'MANNING_AGENT') return router.push({ name: 'AgentDashboard' })
+  router.push('/')
+}
 
-  if (token && userParam) {
+onMounted(async () => {
+  // Auto-login από landing page token
+  if (route.query.token && route.query.user) {
     try {
-      const user = JSON.parse(decodeURIComponent(userParam))
-      // Αποθήκευσε στο store και localStorage
-      localStorage.setItem('hirehub_token', token)
-      localStorage.setItem('hirehub_refresh', refresh || '')
+      const user = JSON.parse(decodeURIComponent(route.query.user))
+      localStorage.setItem('hirehub_token', route.query.token)
+      localStorage.setItem('hirehub_refresh', route.query.refresh || '')
       localStorage.setItem('hirehub_user', JSON.stringify(user))
-      // Ενημέρωσε το auth store
-      auth.token = token
+      auth.token = route.query.token
       auth.user = user
-      // Redirect βάσει ρόλου
-      redirectByRole(user.role)
-    } catch (e) {
-      console.error('Auto-login failed:', e)
-    }
+      return redirectByRole(user.role)
+    } catch(e) { console.error(e) }
+  }
+
+  // Auto-login από landing page email/pass redirect
+  if (route.query.email && route.query.pass) {
+    email.value = decodeURIComponent(route.query.email)
+    password.value = decodeURIComponent(route.query.pass)
+    await handleLogin()
   }
 })
-
-function redirectByRole(role) {
-  if (!role) { router.push('/'); return }
-  switch (role.toUpperCase()) {
-    case 'SEAFARER':      router.push('/'); break
-    case 'SHIPOWNER':     router.push('/'); break
-    case 'MANNING_AGENT': router.push('/'); break
-    case 'ADMIN':         router.push('/admin'); break
-    default:              router.push('/')
-  }
-}
 
 async function handleLogin() {
   error.value = ""
   loading.value = true
   try {
     await auth.login(email.value, password.value)
-    const user = auth.user
-    redirectByRole(user?.role)
+    redirectByRole(auth.user?.role)
   } catch (e) {
     error.value = e.response?.data?.message || "Invalid email or password"
   } finally {
@@ -67,19 +61,24 @@ async function handleLogin() {
       <div class="logo-mark" style="width:48px;height:48px;font-size:24px;margin:0 auto var(--space-5)">H</div>
       <h1>Sign in to HireHub</h1>
       <p class="subtitle">The Professional Network for Maritime Crew</p>
-      <div v-if="error" class="error-msg">{{ error }}</div>
-      <div class="form-group">
-        <label>Email</label>
-        <input class="input" v-model="email" type="email" placeholder="your@email.com" @keyup.enter="handleLogin" />
+      <div v-if="loading" style="text-align:center;padding:20px;color:var(--color-text-secondary)">
+        Signing in...
       </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input class="input" v-model="password" type="password" placeholder="Password" @keyup.enter="handleLogin" />
-      </div>
-      <button class="btn btn-primary" style="width:100%;margin-top:var(--space-4)" :disabled="loading" @click="handleLogin">
-        {{ loading ? 'Signing in...' : 'Sign in' }}
-      </button>
-      <p class="switch-link">New to HireHub? <router-link to="/register">Create account</router-link></p>
+      <template v-else>
+        <div v-if="error" class="error-msg">{{ error }}</div>
+        <div class="form-group">
+          <label>Email</label>
+          <input class="input" v-model="email" type="email" placeholder="your@email.com" @keyup.enter="handleLogin" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input class="input" v-model="password" type="password" placeholder="Password" @keyup.enter="handleLogin" />
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:var(--space-4)" :disabled="loading" @click="handleLogin">
+          Sign in
+        </button>
+        <p class="switch-link">New to HireHub? <router-link to="/register">Create account</router-link></p>
+      </template>
     </div>
   </div>
 </template>
