@@ -45,6 +45,7 @@ const navItems = computed(() => {
     )
   } else if (auth.isSeafarer) {
     items.push(
+      { icon: icons.aiRec, label: 'AI Career', title: 'AI Σύμβουλος Καριέρας — θέσεις, εταιρείες, μισθός, πιστοποιητικά', to: '/ai-career', active: route.path === '/ai-career' },
       { icon: icons.profile, label: 'Profile', title: 'Το προφίλ σας — στοιχεία, ρυθμίσεις', to: '/profile', active: route.path.startsWith('/profile') },
       { icon: icons.salary, label: 'Salary', title: 'Σύγκριση μισθών — ανά βαθμό, πλοίο, εθνικότητα', to: '/salary', active: route.path === '/salary' }
     )
