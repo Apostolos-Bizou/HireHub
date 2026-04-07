@@ -2,6 +2,7 @@
 import { ref, computed } from "vue"
 import { useRoute } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
+import CrewScoreWidget from "@/components/crewscore/CrewScoreWidget.vue"
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -276,6 +277,7 @@ const profile = ref({
         <button :class="{ active: activeTab === 'service' }" @click="activeTab = 'service'">Sea Service ({{ profile.seaServiceRecords.length }})</button>
         <button :class="{ active: activeTab === 'certs' }" @click="activeTab = 'certs'">Certificates ({{ profile.certificates.length }})</button>
         <button :class="{ active: activeTab === 'skills' }" @click="activeTab = 'skills'">Skills & Awards</button>
+        <button :class="{ active: activeTab === 'crewscore' }" @click="activeTab = 'crewscore'">CrewScore</button>
         <button :class="{ active: activeTab === 'docs' }" @click="activeTab = 'docs'">Documents ({{ profile.documents.reduce((a,c) => a + c.items.length, 0) }})</button>
       </div>
 
@@ -414,6 +416,11 @@ const profile = ref({
             </div>
           </div>
         </div>
+      </template>
+
+      <!-- CrewScore Tab -->
+      <template v-if="activeTab === 'crewscore'">
+        <CrewScoreWidget :showReviewButton="false" />
       </template>
 
       <!-- Modal Form -->
