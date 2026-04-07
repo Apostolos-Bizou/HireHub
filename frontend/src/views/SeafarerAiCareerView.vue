@@ -239,11 +239,11 @@ function scoreColor(s) {
         <h2>Your path: {{ roadmap.currentRank }} → {{ roadmap.nextRank }}</h2>
         <p class="section-sub">Estimated time to promotion: <strong>{{ roadmap.timeToPromotion }}</strong></p>
         <div class="roadmap-checklist">
-          <div v-for="(r, i) in roadmap.requirements" :key="i" class="rm-item" :class="'rm-' + r.status">
+          <div v-for="(r, i) in roadmap.requirements" :key="i" class="rm-item" :class="'rms-' + r.status">
             <div class="rm-icon">
-              <span v-if="r.status === 'done'" class="rm-check">✓</span>
-              <span v-else-if="r.status === 'action'" class="rm-action">!</span>
-              <span v-else class="rm-pending">○</span>
+              <span v-if="r.status === 'done'" class="rmi-check">✓</span>
+              <span v-else-if="r.status === 'action'" class="rmi-action">!</span>
+              <span v-else class="rmi-pending">○</span>
             </div>
             <div class="rm-body">
               <strong>{{ r.item }}</strong>
@@ -404,13 +404,13 @@ function scoreColor(s) {
 /* Career Roadmap */
 .roadmap-checklist { display: flex; flex-direction: column; gap: var(--space-3); }
 .rm-item { display: flex; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); }
-.rm-done { background: var(--color-success-bg); }
-.rm-action { background: var(--color-warning-bg); }
-.rm-pending { background: var(--color-surface); }
+.rms-done { background: var(--color-success-bg); }
+.rms-action { background: var(--color-warning-bg); }
+.rms-pending { background: var(--color-surface); }
 .rm-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
-.rm-check { background: var(--color-success); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.rm-action { background: var(--color-warning); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.rm-pending { color: var(--color-text-tertiary); }
+.rmi-check { background: var(--color-success); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.rmi-action { background: var(--color-warning); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.rmi-pending { color: var(--color-text-tertiary); }
 .rm-body strong { font: var(--font-body); font-weight: 500; display: block; }
 .rm-body p { font: var(--font-small); color: var(--color-text-secondary); margin-top: 2px; }
 .career-timeline { position: relative; padding-left: var(--space-5); }
