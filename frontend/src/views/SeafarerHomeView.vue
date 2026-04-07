@@ -291,6 +291,41 @@ const demandView = ref('rank')
           </div>
         </div>
 
+        <!-- Review Colleagues -->
+        <div class="card section">
+          <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Review colleagues
+          </h3>
+          <p class="review-hint" title="Αξιολόγησε συναδέλφους που ήταν μαζί σου στο ίδιο πλοίο">Seafarers you served with — tap to review</p>
+          <div class="colleague-list">
+            <router-link to="/seafarer/106" class="colleague-row">
+              <div class="colleague-avatar" style="background:#0A66C2">DP</div>
+              <div class="colleague-info">
+                <strong>Dmitry Petrov</strong>
+                <span>Chief Engineer · MT Aegean Warrior · 8 months</span>
+              </div>
+              <span class="colleague-action">Review</span>
+            </router-link>
+            <router-link to="/seafarer/102" class="colleague-row">
+              <div class="colleague-avatar" style="background:#E7A33E">RG</div>
+              <div class="colleague-info">
+                <strong>Ruslan Goncharov</strong>
+                <span>2nd Officer · MT Mediterranean Star · 6 months</span>
+              </div>
+              <span class="colleague-action">Review</span>
+            </router-link>
+            <router-link to="/seafarer/103" class="colleague-row">
+              <div class="colleague-avatar" style="background:#1D9E75">AM</div>
+              <div class="colleague-info">
+                <strong>Andrei Marinescu</strong>
+                <span>Chief Officer · MT Coral Bay · 4 months</span>
+              </div>
+              <span class="colleague-action">Review</span>
+            </router-link>
+          </div>
+        </div>
+
         <!-- Salary Snapshot -->
         <div class="card section">
           <h3>
@@ -504,6 +539,34 @@ export default {
 .qa-btn:hover { border-color: var(--color-primary); background: var(--color-primary-light); color: var(--color-primary); text-decoration: none; }
 
 [title]{cursor:help}
+
+/* Review Colleagues */
+.review-hint { font: var(--font-caption); color: var(--color-text-tertiary); margin: -8px 0 var(--space-3) 0; }
+.colleague-list { display: flex; flex-direction: column; gap: var(--space-1); }
+.colleague-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+.colleague-row:hover { background: var(--color-primary-light); text-decoration: none; }
+.colleague-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 600; font-size: 11px; flex-shrink: 0;
+}
+.colleague-info { flex: 1; min-width: 0; }
+.colleague-info strong { display: block; font: var(--font-small); font-weight: 500; }
+.colleague-info span { font: var(--font-caption); color: var(--color-text-tertiary); }
+.colleague-action {
+  font: var(--font-caption); font-weight: 500;
+  color: var(--color-primary); background: var(--color-primary-light);
+  padding: 3px 10px; border-radius: 10px; flex-shrink: 0;
+}
 @media (max-width: 1024px) {
   .dash-layout { grid-template-columns: 1fr; }
   .charts-row { grid-template-columns: 1fr; }
