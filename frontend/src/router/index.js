@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -50,15 +50,12 @@ const routes = [
     component: () => import('@/views/AiRecommenderView.vue'),
     meta: { requiresAuth: true, roles: ['SHIPOWNER', 'MANNING_AGENT', 'ADMIN'] }
   },
-  // ===== PROFILE ROUTING =====
-  // Viewing a SEAFARER's public profile (Shipowner/Agent clicks on candidate)
   {
     path: '/seafarer/:id',
     name: 'SeafarerPublic',
     component: () => import('@/views/SeafarerPublicView.vue'),
     meta: { requiresAuth: true }
   },
-  // Viewing a COMPANY's public profile (Seafarer clicks on a company)
   {
     path: '/company/:id',
     name: 'CompanyPublic',
@@ -83,7 +80,6 @@ const routes = [
     component: () => import('@/views/GuideView.vue'),
     meta: { requiresAuth: true }
   },
-  // Own profile — redirects based on role
   {
     path: '/profile',
     name: 'MyProfile',
@@ -115,12 +111,10 @@ const routes = [
     component: () => import('@/views/AgentDashboardView.vue'),
     meta: { requiresAuth: true, roles: ['MANNING_AGENT', 'ADMIN'] }
   },
-  // Legacy /profile/:id route — redirect to /seafarer/:id
   {
     path: '/profile/:id',
     redirect: to => ({ name: 'SeafarerPublic', params: { id: to.params.id } })
   },
-  // ===== END PROFILE ROUTING =====
   {
     path: '/shortlists',
     name: 'Shortlists',
@@ -186,6 +180,33 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore()
 
+  // Αν έρχεται στο /login με token από landing page — άφσε το να περάσει
+  // και το LoginView.vue θα κάνει auto-login μέσω onMounted
+  if (to.name === 'Login' && to.query.token) {
+    // Κάνε auto-login εδώ στο router guard
+    const token = to.query.token
+    const refresh = to.query.refresh
+    const userRaw = to.query.user
+    if (token && userRaw) {
+      try {
+        const user = JSON.parse(decodeURIComponent(userRaw))
+        localStorage.setItem('hirehub_token', token)
+        localStorage.setItem('hirehub_refresh', refresh || '')
+        localStorage.setItem('hirehub_user', JSON.stringify(user))
+        auth.token = token
+        auth.user = user
+        // Redirect βάσει ρόλου
+        const role = user.role?.toUpperCase()
+        if (role === 'SEAFARER') return next({ name: 'SeafarerHome' })
+        if (role === 'SHIPOWNER') return next({ name: 'ShipownerHome' })
+        if (role === 'MANNING_AGENT') return next({ name: 'AgentDashboard' })
+        return next({ name: 'Home' })
+      } catch (e) {
+        console.error('Token parse error:', e)
+      }
+    }
+  }
+
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
   } else if (to.meta.guest && auth.isAuthenticated) {
@@ -198,4 +219,3 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
-
