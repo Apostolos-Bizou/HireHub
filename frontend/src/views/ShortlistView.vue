@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useShortlistStore } from '@/stores/shortlists'
@@ -7,6 +7,8 @@ import { useShortlistStore } from '@/stores/shortlists'
 const router = useRouter()
 const store = useShortlistStore()
 const shortlists = computed(() => store.shortlists)
+const loading = computed(() => store.loading)
+onMounted(() => store.loadShortlists())
 
 // Modal state
 const showModal = ref(false)
@@ -25,7 +27,7 @@ const vesselTypes = ['Oil/Chemical Tanker', 'Bulk Carrier', 'Container', 'LPG/LN
 
 // Auto-generate title from rank + vessel type
 const autoTitle = computed(() => {
-  if (newRank.value && newVesselType.value) return `${newRank.value} — ${newVesselType.value}`
+  if (newRank.value && newVesselType.value) return `${newRank.value} β€” ${newVesselType.value}`
   if (newRank.value) return newRank.value
   return ''
 })
@@ -65,7 +67,7 @@ async function createShortlist() {
       sentToAgent: 0,
       avgScore: 0,
       created: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      agentName: '—'
+      agentName: 'β€”'
     })
     saveSuccess.value = true
     setTimeout(() => { closeModal(); saveSuccess.value = false }, 1200)
@@ -80,7 +82,7 @@ async function createShortlist() {
       sentToAgent: 0,
       avgScore: 0,
       created: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      agentName: '—'
+      agentName: 'β€”'
     })
     saveSuccess.value = true
     setTimeout(() => { closeModal(); saveSuccess.value = false }, 1200)
@@ -97,7 +99,7 @@ function scoreClass(s) { return s >= 85 ? "ai-score-high" : s >= 70 ? "ai-score-
     <div class="page-header">
       <div>
         <h1>My Shortlists</h1>
-        <p class="page-sub">{{ shortlists.length }} shortlists · {{ shortlists.reduce((a, s) => a + s.candidateCount, 0) }} total candidates</p>
+        <p class="page-sub">{{ shortlists.length }} shortlists Β· {{ shortlists.reduce((a, s) => a + s.candidateCount, 0) }} total candidates</p>
       </div>
       <button class="btn btn-primary" @click="openModal">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -115,7 +117,7 @@ function scoreClass(s) { return s >= 85 ? "ai-score-high" : s >= 70 ? "ai-score-
         <div class="shortlist-top">
           <div class="shortlist-info">
             <h3>{{ s.title }}</h3>
-            <p class="shortlist-context">{{ s.vesselContext }} · Created {{ s.created }}</p>
+            <p class="shortlist-context">{{ s.vesselContext }} Β· Created {{ s.created }}</p>
           </div>
           <span class="badge" :class="s.status === 'ACTIVE' ? 'badge-info' : 'badge-verified'">
             {{ s.status === 'ACTIVE' ? 'Active' : 'Completed' }}
@@ -132,7 +134,7 @@ function scoreClass(s) { return s >= 85 ? "ai-score-high" : s >= 70 ? "ai-score-
             <div class="sl-metric-label">Sent to agent</div>
           </div>
           <div class="sl-metric">
-            <div class="ai-score ai-score-sm" :class="s.avgScore ? scoreClass(s.avgScore) : ''">{{ s.avgScore || '—' }}</div>
+            <div class="ai-score ai-score-sm" :class="s.avgScore ? scoreClass(s.avgScore) : ''">{{ s.avgScore || 'β€”' }}</div>
             <div class="sl-metric-label">Avg score</div>
           </div>
           <div class="sl-metric">
@@ -184,7 +186,7 @@ function scoreClass(s) { return s >= 85 ? "ai-score-high" : s >= 70 ? "ai-score-
 
           <div class="form-group">
             <label>Title <span class="form-hint">(auto-generated or custom)</span></label>
-            <input type="text" v-model="newTitle" :placeholder="autoTitle || 'e.g. 3rd Officer — Oil/Chemical Tanker'" />
+            <input type="text" v-model="newTitle" :placeholder="autoTitle || 'e.g. 3rd Officer β€” Oil/Chemical Tanker'" />
           </div>
 
           <div class="form-group">
