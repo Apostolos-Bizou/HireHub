@@ -232,6 +232,40 @@ const demandData = [
           </div>
         </div>
 
+        <!-- Crew Availability & Nationalities -->
+        <div class="charts-row">
+          <div class="card section">
+            <h2 title="Διαθέσιμοι ναυτικοί ανά βαθμό στην πλατφόρμα">Crew availability by rank</h2>
+            <div class="avail-list">
+              <div class="avail-row"><span class="avail-rank">Master</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:33%"></div></div><span class="avail-num">340</span></div>
+              <div class="avail-row"><span class="avail-rank">Chief Officer</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:50%"></div></div><span class="avail-num">512</span></div>
+              <div class="avail-row"><span class="avail-rank">2nd Officer</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:65%"></div></div><span class="avail-num">670</span></div>
+              <div class="avail-row"><span class="avail-rank">3rd Officer</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:83%"></div></div><span class="avail-num">852</span></div>
+              <div class="avail-row"><span class="avail-rank">Chief Engineer</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:26%"></div></div><span class="avail-num">268</span></div>
+              <div class="avail-row"><span class="avail-rank">2nd Engineer</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:45%"></div></div><span class="avail-num">462</span></div>
+              <div class="avail-row"><span class="avail-rank">3rd Engineer</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:57%"></div></div><span class="avail-num">584</span></div>
+              <div class="avail-row"><span class="avail-rank">Bosun</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:42%"></div></div><span class="avail-num">428</span></div>
+              <div class="avail-row"><span class="avail-rank">AB</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:100%"></div></div><span class="avail-num">1,036</span></div>
+              <div class="avail-row"><span class="avail-rank">Oiler / Wiper</span><div class="avail-bar-bg"><div class="avail-bar-fill" style="width:71%"></div></div><span class="avail-num">732</span></div>
+            </div>
+          </div>
+          <div class="card section">
+            <h2 title="Κατανομή ναυτικών ανά εθνικότητα στην πλατφόρμα">Top nationalities</h2>
+            <div class="nat-list">
+              <div class="nat-row"><span class="nat-name">Filipino</span><span class="nat-num">14,908</span><span class="nat-pct">60%</span></div>
+              <div class="nat-row"><span class="nat-name">Ukrainian</span><span class="nat-num">2,732</span><span class="nat-pct">11%</span></div>
+              <div class="nat-row"><span class="nat-name">Indian</span><span class="nat-num">1,988</span><span class="nat-pct">8%</span></div>
+              <div class="nat-row"><span class="nat-name">Romanian</span><span class="nat-num">1,242</span><span class="nat-pct">5%</span></div>
+              <div class="nat-row"><span class="nat-name">Russian</span><span class="nat-num">994</span><span class="nat-pct">4%</span></div>
+              <div class="nat-row"><span class="nat-name">Greek</span><span class="nat-num">746</span><span class="nat-pct">3%</span></div>
+              <div class="nat-row"><span class="nat-name">Bulgarian</span><span class="nat-num">497</span><span class="nat-pct">2%</span></div>
+              <div class="nat-row"><span class="nat-name">Indonesian</span><span class="nat-num">373</span><span class="nat-pct">1.5%</span></div>
+              <div class="nat-row"><span class="nat-name">Chinese</span><span class="nat-num">249</span><span class="nat-pct">1%</span></div>
+              <div class="nat-row"><span class="nat-name">Other</span><span class="nat-num">1,118</span><span class="nat-pct">4.5%</span></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Charts Row -->
         <div class="charts-row">
           <div class="card section chart-card">
@@ -537,7 +571,23 @@ export default {
 .opening-label { font: var(--font-caption); color: var(--color-text-tertiary); }
 
 /* Charts */
-.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3); }
+
+/* Crew Availability */
+.avail-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.avail-row { display: flex; align-items: center; gap: var(--space-3); }
+.avail-rank { font: var(--font-small); font-weight: 500; width: 110px; flex-shrink: 0; }
+.avail-bar-bg { flex: 1; height: 8px; background: var(--color-surface); border-radius: 4px; overflow: hidden; }
+.avail-bar-fill { height: 100%; background: var(--color-primary); border-radius: 4px; }
+.avail-num { font: var(--font-small); font-weight: 600; color: var(--color-primary); width: 50px; text-align: right; }
+
+/* Nationalities */
+.nat-list { display: flex; flex-direction: column; }
+.nat-row { display: flex; align-items: center; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
+.nat-row:last-child { border-bottom: none; }
+.nat-name { flex: 1; font: var(--font-small); }
+.nat-num { font: var(--font-small); font-weight: 600; color: var(--color-primary); width: 60px; text-align: right; }
+.nat-pct { font: var(--font-caption); color: var(--color-text-tertiary); width: 40px; text-align: right; }
 .chart-card canvas { max-height: 200px; }
 
 /* Sidebar */
