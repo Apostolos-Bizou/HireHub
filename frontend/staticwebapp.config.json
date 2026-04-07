@@ -1,6 +1,7 @@
 ﻿{
   "navigationFallback": {
-    "rewrite": "/index.html"
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/images/*", "*.css", "*.js", "*.png", "*.jpg", "*.svg", "*.ico", "*.woff2"]
   },
   "routes": [
     {
@@ -8,6 +9,19 @@
       "allowedRoles": ["anonymous"]
     }
   ],
+  "globalHeaders": {
+    "Cache-Control": "no-cache"
+  },
+  "mimeTypes": {
+    ".js": "application/javascript",
+    ".mjs": "application/javascript"
+  },
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    }
+  },
   "forwardingGateway": {
     "requiredHeaders": {},
     "allowedForwardedHosts": ["hirehub-api.azurewebsites.net"]
