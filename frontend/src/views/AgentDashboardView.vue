@@ -484,7 +484,7 @@ const checkPct = computed(() => Math.round(checkDone.value / checklist.value.len
     <div v-if="aiSubTab===1">
       <div class="card sec">
         <h3>Side-by-side — {{shortlists[selectedRequest]?.position || 'Candidates'}}</h3>
-        <div class="cmp-grid">
+        <div class="cmp-grid" :style="'grid-template-columns: 120px repeat(' + compareCandidates.length + ', 1fr)'">
           <div class="cmp-hdr">Criteria</div><div v-for="dc in compareCandidates" :key="dc.i" class="cmp-hdr"><div class="av-sm" :style="{background:dc.color}">{{dc.i}}</div> {{dc.name}}</div>
           
           
